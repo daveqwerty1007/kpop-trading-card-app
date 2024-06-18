@@ -20,7 +20,7 @@ def load_csv_to_db(table_name, csv_file_path, columns):
         next(csv_data)  # Skip the header row
         for row in csv_data:
             placeholders = ', '.join(['%s'] * len(row))
-            columns_str = ', '.join([f"`{col}`" if col.lower() in ['from', 'to'] else col for col in columns])
+            columns_str = ', '.join(columns)
             sql = f"INSERT IGNORE INTO {table_name} ({columns_str}) VALUES ({placeholders})"
             cursor.execute(sql, tuple(row))
     

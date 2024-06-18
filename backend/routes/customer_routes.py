@@ -1,5 +1,3 @@
-# backend/routes/customer_routes.py
-
 from flask import Blueprint, request, jsonify
 import mysql.connector
 from config import DB_CONFIG
