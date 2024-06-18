@@ -1,1 +1,0 @@
-# kpop-trading-card-app
