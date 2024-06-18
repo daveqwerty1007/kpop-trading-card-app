@@ -1,0 +1,11 @@
+ShippingNumber,OrderID,ProductID,NumberOfItems,From,To,EmployeeID,CustomerID,Status
+1,1,1,2,Seoul,Seoul,1,1,Shipped
+2,2,2,1,Busan,Busan,2,2,Shipped
+3,3,3,3,Daegu,Daegu,3,3,Delivered
+4,4,4,2,Incheon,Incheon,4,4,Shipped
+5,5,5,1,Daejeon,Daejeon,5,5,Delivered
+6,6,6,4,Gwangju,Gwangju,6,6,Processing
+7,7,7,2,Suwon,Suwon,7,7,Processing
+8,8,8,3,Ulsan,Ulsan,8,8,Delivered
+9,9,9,2,Jeju,Jeju,9,9,Shipped
+10,10,10,1,Pohang,Pohang,10,10,Delivered
