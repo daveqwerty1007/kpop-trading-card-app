@@ -1,35 +1,26 @@
-# backend/routes/product_routes.py
-
 from flask import Blueprint, request, jsonify
-import mysql.connector
-from config import DB_CONFIG
+from models import db, Product
 
 product_bp = Blueprint('product_bp', __name__)
 
-def connect_to_db():
-    return mysql.connector.connect(
-        host=DB_CONFIG['host'],
-        user=DB_CONFIG['user'],
-        password=DB_CONFIG['password'],
-        database=DB_CONFIG['database']
-    )
-
 @product_bp.route('/', methods=['GET'])
 def get_products():
-    conn = connect_to_db()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM Product")
-    products = cursor.fetchall()
-    conn.close()
-    return jsonify(products)
+    products = Product.query.all()
+    return jsonify([{
+        'ProductID': product.ProductID,
+        'ProductName': product.ProductName,
+        'SellingPrice': product.SellingPrice,
+        'GroupID': product.GroupID
+    } for product in products])
 
 @product_bp.route('/', methods=['POST'])
 def add_product():
     new_product = request.json
-    conn = connect_to_db()
-    cursor = conn.cursor()
-    sql = "INSERT INTO Product (ProductName, SellingPrice, GroupID) VALUES (%s, %s, %s)"
-    cursor.execute(sql, (new_product['ProductName'], new_product['SellingPrice'], new_product['GroupID']))
-    conn.commit()
-    conn.close()
+    product = Product(
+        ProductName=new_product['ProductName'],
+        SellingPrice=new_product['SellingPrice'],
+        GroupID=new_product['GroupID']
+    )
+    db.session.add(product)
+    db.session.commit()
     return jsonify({"message": "Product added successfully!"}), 201
