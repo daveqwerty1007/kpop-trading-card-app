@@ -1,0 +1,11 @@
+DeliveryID,DeliveryMethod,Cost
+1,Standard,5.00
+2,Express,10.00
+3,Same Day,15.00
+4,Next Day,12.00
+5,International,20.00
+6,Pickup,0.00
+7,Drone,25.00
+8,Overnight,18.00
+9,Economy,7.00
+10,Priority,8.00
