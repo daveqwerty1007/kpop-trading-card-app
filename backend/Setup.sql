@@ -3,7 +3,7 @@ USE kpop_trading;
 
 -- Drop existing tables if they exist
 DROP TABLE IF EXISTS Shipping;
-DROP TABLE IF EXISTS `Order`;
+DROP TABLE IF EXISTS OrderDetail;
 DROP TABLE IF EXISTS Product;
 DROP TABLE IF EXISTS Employee;
 DROP TABLE IF EXISTS Customer;
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS Product (
     GroupID INT
 );
 
-CREATE TABLE IF NOT EXISTS `Order` (
+CREATE TABLE IF NOT EXISTS OrderDetail (
     OrderID INT AUTO_INCREMENT PRIMARY KEY,
     OrderNumber VARCHAR(255) NOT NULL,
     ProductID INT,
@@ -76,8 +76,8 @@ CREATE TABLE IF NOT EXISTS Shipping (
     OrderID INT,
     ProductID INT,
     NumberOfItems INT,
-    `From` VARCHAR(255),
-    `To` VARCHAR(255),
+    Origin VARCHAR(255),
+    Destination VARCHAR(255),
     EmployeeID INT,
     CustomerID INT,
     Status VARCHAR(255)
@@ -88,7 +88,7 @@ ALTER TABLE Product
 ADD CONSTRAINT fk_product_group
 FOREIGN KEY (GroupID) REFERENCES KpopGroup(GroupID);
 
-ALTER TABLE `Order`
+ALTER TABLE OrderDetail
 ADD CONSTRAINT fk_order_product
 FOREIGN KEY (ProductID) REFERENCES Product(ProductID),
 ADD CONSTRAINT fk_order_employee
@@ -98,7 +98,7 @@ FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID);
 
 ALTER TABLE Shipping
 ADD CONSTRAINT fk_shipping_order
-FOREIGN KEY (OrderID) REFERENCES `Order`(OrderID),
+FOREIGN KEY (OrderID) REFERENCES OrderDetail(OrderID),
 ADD CONSTRAINT fk_shipping_product
 FOREIGN KEY (ProductID) REFERENCES Product(ProductID),
 ADD CONSTRAINT fk_shipping_employee

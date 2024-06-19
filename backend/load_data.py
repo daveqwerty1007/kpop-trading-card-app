@@ -50,9 +50,9 @@ if __name__ == "__main__":
     # Load data into tables with foreign key dependencies
     load_csv_to_db('Product', os.path.join(sample_data_dir, 'Product.csv'), 
                    ['ProductID', 'ProductName', 'SellingPrice', 'GroupID'])
-    load_csv_to_db('`Order`', os.path.join(sample_data_dir, 'Order.csv'), 
+    load_csv_to_db('OrderDetail', os.path.join(sample_data_dir, 'Order.csv'), 
                    ['OrderID', 'OrderNumber', 'ProductID', 'NumberOfItems', 'Price', 
                     'Branch', 'Date', 'Time', 'EmployeeID', 'CustomerID', 'Status'])
     load_csv_to_db('Shipping', os.path.join(sample_data_dir, 'Shipping.csv'), 
-                   ['ShippingNumber', 'OrderID', 'ProductID', 'NumberOfItems', '`From`', 
-                    '`To`', 'EmployeeID', 'CustomerID', 'Status'])
+                   ['ShippingNumber', 'OrderID', 'ProductID', 'NumberOfItems', 'Origin', 
+                    'Destination', 'EmployeeID', 'CustomerID', 'Status'])
