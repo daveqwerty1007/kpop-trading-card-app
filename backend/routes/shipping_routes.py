@@ -26,7 +26,7 @@ def add_shipping():
     new_shipping = request.json
     conn = connect_to_db()
     cursor = conn.cursor()
-    sql = "INSERT INTO Shipping (OrderID, ProductID, NumberOfItems, `From`, `To`, EmployeeID, CustomerID, Status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+    sql = "INSERT INTO Shipping (OrderID, ProductID, NumberOfItems, Origin, Destination, EmployeeID, CustomerID, Status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
     cursor.execute(sql, (new_shipping['OrderID'], new_shipping['ProductID'], new_shipping['NumberOfItems'], new_shipping['From'], new_shipping['To'], new_shipping['EmployeeID'], new_shipping['CustomerID'], new_shipping['Status']))
     conn.commit()
     conn.close()
