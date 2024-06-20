@@ -2,15 +2,7 @@
 import mysql.connector
 import os
 from flask import Flask
-from backend.routes.branch_routes import branch_bp
-from backend.routes.customer_routes import customer_bp
-from backend.routes.delivery_routes import delivery_bp
-from backend.routes.employee_routes import employee_bp
-from backend.routes.kpopgroup_routes import kpopgroup_bp
-from backend.routes.order_routes import order_bp
-from backend.routes.product_routes import product_bp
-from backend.routes.shipping_routes import shipping_bp
-from backend.routes.warehouse_routes import warehouse_bp
+from routes import branch_bp,customer_bp,delivery_bp,employee_bp,kpopgroup_bp,order_bp,product_bp,shipping_bp,warehouse_bp
 
 def connect_to_rds():
     connection = mysql.connector.connect(

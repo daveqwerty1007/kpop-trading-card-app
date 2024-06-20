@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import mysql.connector
-from backend.config import DB_CONFIG
+from config import DB_CONFIG
 
 branch_bp = Blueprint('branch_bp', __name__)
 

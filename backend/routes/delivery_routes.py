@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import mysql.connector
-from backend.config import DB_CONFIG
+from config import DB_CONFIG
 
 delivery_bp = Blueprint('delivery_bp', __name__)
 
