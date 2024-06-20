@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 import mysql.connector
-from config import DB_CONFIG
-from datetime import timedelta
+from backend.config import DB_CONFIG
 
 order_bp = Blueprint('order_bp', __name__)
 
