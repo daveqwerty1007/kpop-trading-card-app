@@ -2,7 +2,15 @@
 import mysql.connector
 import os
 from flask import Flask
-from backend.routes import branch_routes, customer_routes, delivery_routes, employee_routes, kpopgroup_routes, order_routes, product_routes, shipping_routes, warehouse_routes
+from backend.routes.branch_routes import branch_bp
+from backend.routes.customer_routes import customer_bp
+from backend.routes.delivery_routes import delivery_bp
+from backend.routes.employee_routes import employee_bp
+from backend.routes.kpopgroup_routes import kpopgroup_bp
+from backend.routes.order_routes import order_bp
+from backend.routes.product_routes import product_bp
+from backend.routes.shipping_routes import shipping_bp
+from backend.routes.warehouse_routes import warehouse_bp
 
 def connect_to_rds():
     connection = mysql.connector.connect(
@@ -54,13 +62,13 @@ if __name__ == "__main__":
 app = Flask(__name__)
 
 # Register Blueprints
-app.register_blueprint(product_bp, url_prefix='/api/products')
+app.register_blueprint(branch_bp, url_prefix='/api/branches')
 app.register_blueprint(customer_bp, url_prefix='/api/customers')
 app.register_blueprint(order_bp, url_prefix='/api/orders')
 app.register_blueprint(employee_bp, url_prefix='/api/employees')
 app.register_blueprint(shipping_bp, url_prefix='/api/shippings')
 app.register_blueprint(warehouse_bp, url_prefix='/api/warehouses')
-app.register_blueprint(branch_bp, url_prefix='/api/branches')
+app.register_blueprint(product_bp, url_prefix='/api/products')
 app.register_blueprint(delivery_bp, url_prefix='/api/deliveries')
 app.register_blueprint(kpopgroup_bp, url_prefix='/api/kpopgroups')
 
