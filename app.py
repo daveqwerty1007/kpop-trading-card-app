@@ -1,7 +1,6 @@
 from flask import Flask, render_template
 from backend import create_database, create_tables
 
-# Import the blueprints from the backend.routes module
 from backend.routes.branch_routes import branch_bp
 from backend.routes.customer_routes import customer_bp
 from backend.routes.delivery_routes import delivery_bp
@@ -14,7 +13,6 @@ from backend.routes.warehouse_routes import warehouse_bp
 
 app = Flask(__name__, static_folder='frontend/static', template_folder='frontend/templates')
 
-# Register the blueprints with their respective URL prefixes
 app.register_blueprint(branch_bp, url_prefix='/api/branches')
 app.register_blueprint(customer_bp, url_prefix='/api/customers')
 app.register_blueprint(order_bp, url_prefix='/api/orders')
@@ -25,7 +23,6 @@ app.register_blueprint(product_bp, url_prefix='/api/products')
 app.register_blueprint(delivery_bp, url_prefix='/api/deliveries')
 app.register_blueprint(kpopgroup_bp, url_prefix='/api/kpopgroups')
 
-# Define routes to serve the HTML templates
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -55,7 +52,7 @@ def send_static(path):
     return app.send_static_file(path)
 
 if __name__ == '__main__':
-    create_database()  # Create the database first
-    create_tables()    # Then create tables
+    create_database()  
+    create_tables()
     print("Database, tables, and sample data created successfully")
     app.run(debug=True)
