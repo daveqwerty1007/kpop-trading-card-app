@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Branches - Kpop Trading Cards</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Kpop Trading Cards</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/branches">Branches</a>
+            <a href="/products">Products</a>
+            <a href="/cart">Cart</a>
+            <a href="/login">Login</a>
+            <a href="/signup">Signup</a>
+        </nav>
+    </header>
+    <main>
+        <h2>Branches</h2>
+        <ul id="branches-list"></ul>
+        <h3>Add a new branch</h3>
+        <form id="add-branch-form">
+            <label for="branch-name">Branch Name:</label>
+            <input type="text" id="branch-name" name="branch-name" required>
+            <button type="submit">Add Branch</button>
+        </form>
+    </main>
+    <footer>
+        <p>&copy; 2024 Kpop Trading Cards</p>
+    </footer>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadBranches();
+
+            const form = document.getElementById('add-branch-form');
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const branchName = document.getElementById('branch-name').value;
+                await addBranch({ BranchName: branchName });
+                loadBranches();
+                form.reset();
+            });
+        });
+
+        async function loadBranches() {
+            const branches = await fetchBranches();
+            const branchesList = document.getElementById('branches-list');
+            branchesList.innerHTML = branches.map(branch => `<li>${branch.BranchName}</li>`).join('');
+        }
+    </script>
+</body>
+</html>

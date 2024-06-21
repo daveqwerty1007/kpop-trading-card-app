@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - Kpop Trading Cards</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Kpop Trading Cards</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/branches">Branches</a>
+            <a href="/products">Products</a>
+            <a href="/cart">Cart</a>
+            <a href="/login">Login</a>
+            <a href="/signup">Signup</a>
+        </nav>
+    </header>
+    <main>
+        <h2>Products</h2>
+        <table id="products-table">
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Price</th>
+                    <th>Group ID</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Products will be loaded here -->
+            </tbody>
+        </table>
+        <h3>Add a new product</h3>
+        <form id="add-product-form">
+            <label for="product-name">Product Name:</label>
+            <input type="text" id="product-name" name="product-name" required>
+            <label for="product-price">Product Price:</label>
+            <input type="number" id="product-price" name="product-price" required>
+            <label for="group-id">Group ID:</label>
+            <input type="number" id="group-id" name="group-id" required>
+            <button type="submit">Add Product</button>
+        </form>
+    </main>
+    <footer>
+        <p>&copy; 2024 Kpop Trading Cards</p>
+    </footer>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProducts();
+
+            const form = document.getElementById('add-product-form');
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const productName = document.getElementById('product-name').value;
+                const productPrice = document.getElementById('product-price').value;
+                const groupId = document.getElementById('group-id').value;
+                await addProduct({ ProductName: productName, SellingPrice: productPrice, GroupID: groupId });
+                loadProducts();
+                form.reset();
+            });
+        });
+
+        async function loadProducts() {
+            const products = await fetchProducts();
+            const productsTableBody = document.querySelector('#products-table tbody');
+            productsTableBody.innerHTML = products.map(product => `
+                <tr>
+                    <td>${product.ProductName}</td>
+                    <td>$${product.SellingPrice}</td>
+                    <td>${product.GroupID}</td>
+                </tr>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

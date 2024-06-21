@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart - Kpop Trading Cards</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Kpop Trading Cards</h1>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/branches">Branches</a>
+            <a href="/products">Products</a>
+            <a href="/cart">Cart</a>
+            <a href="/login">Login</a>
+            <a href="/signup">Signup</a>
+        </nav>
+    </header>
+    <main>
+        <h2>Your Cart</h2>
+        <ul id="cart-list"></ul>
+    </main>
+    <footer>
+        <p>&copy; 2024 Kpop Trading Cards</p>
+    </footer>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCart();
+
+            async function loadCart() {
+                const cartItems = await fetchCart();
+                const cartList = document.getElementById('cart-list');
+                cartList.innerHTML = cartItems.map(item => `<li>${item.ProductName} - $${item.SellingPrice}</li>`).join('');
+            }
+        });
+    </script>
+</body>
+</html>
