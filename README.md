@@ -74,7 +74,7 @@ kpop-trading-card-app/
         ```bash
         export FLASK_APP = app.py;
         ```
-    -load the sample data:
+    - load the sample data:
         ```bash
         python backend/load_data.py
         ```
