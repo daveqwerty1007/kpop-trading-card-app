@@ -1,7 +1,5 @@
--- Use the database
 USE kpop_trading;
 
--- Drop existing tables if they exist
 DROP TABLE IF EXISTS Shipping;
 DROP TABLE IF EXISTS OrderDetail;
 DROP TABLE IF EXISTS Product;
@@ -12,7 +10,6 @@ DROP TABLE IF EXISTS Branch;
 DROP TABLE IF EXISTS Delivery;
 DROP TABLE IF EXISTS KpopGroup;
 
--- Create tables first without foreign keys
 CREATE TABLE IF NOT EXISTS KpopGroup (
     GroupID INT AUTO_INCREMENT PRIMARY KEY,
     GroupName VARCHAR(255) NOT NULL
@@ -83,7 +80,6 @@ CREATE TABLE IF NOT EXISTS Shipping (
     Status VARCHAR(255)
 );
 
--- Add foreign key constraints after all tables are created
 ALTER TABLE Product
 ADD CONSTRAINT fk_product_group
 FOREIGN KEY (GroupID) REFERENCES KpopGroup(GroupID);
