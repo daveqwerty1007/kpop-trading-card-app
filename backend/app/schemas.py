@@ -1,46 +1,79 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
 class UserSchema(BaseModel):
-    id: Optional[int]
+    id: int
     name: str
     email: str
     password: str
-    address: Optional[str]
-    phone_number: Optional[str]
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+    @classmethod
+    def from_orm(cls, obj):
+        return cls.model_validate(obj)
+
+    def dict(self):
+        return self.model_dump()
 
 class CardSchema(BaseModel):
-    id: Optional[int]
+    id: int
     card_name: str
     artist: str
     group: str
-    album: Optional[str]
+    album: str
     price: float
-    description: Optional[str]
-    image_url: Optional[str]
+    description: str
+    image_url: str
+
+    class Config:
+        from_attributes = True
 
 class OrderSchema(BaseModel):
-    id: Optional[int]
+    id: int
     user_id: int
     order_date: datetime
     total_amount: float
 
+    class Config:
+        from_attributes = True
+
 class PaymentSchema(BaseModel):
-    id: Optional[int]
+    id: int
     order_id: int
     payment_date: datetime
     payment_method: str
     payment_status: str
 
+    class Config:
+        from_attributes = True
+
 class InventorySchema(BaseModel):
-    id: Optional[int]
+    id: int
     card_id: int
     quantity_available: int
 
+    class Config:
+        from_attributes = True
+
+    @classmethod
+    def from_orm(cls, obj):
+        return cls.model_validate(obj)
+
+    def dict(self):
+        return self.model_dump()
+
+
 class AdminSchema(BaseModel):
-    id: Optional[int]
+    id: int
     name: str
     email: str
     password: str
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
 

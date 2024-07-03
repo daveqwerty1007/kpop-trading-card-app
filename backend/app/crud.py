@@ -1,30 +1,32 @@
 from .models import db, User, Card, Order, Payment, Inventory, Admin, CartItem
+from . import database
 from werkzeug.security import generate_password_hash
 
 
 # User CRUD operations
 def create_user(user_data):
-    user_data['password'] = generate_password_hash(user_data['password'])
     user = User(**user_data)
     db.session.add(user)
     db.session.commit()
     return user
 
 def get_user_by_id(user_id):
-    return User.query.get(user_id)
+    return db.session.get(User, user_id)
 
 def update_user(user_id, user_data):
-    user = User.query.get(user_id)
-    for key, value in user_data.items():
-        setattr(user, key, value)
-    db.session.commit()
+    user = db.session.get(User, user_id)
+    if user:
+        for key, value in user_data.items():
+            setattr(user, key, value)
+        db.session.commit()
     return user
 
 def delete_user(user_id):
-    user = User.query.get(user_id)
-    db.session.delete(user)
-    db.session.commit()
-    return user_id
+    user = db.session.get(User, user_id)
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+    return user
 
 # Card CRUD operations
 def create_card(card_data):
@@ -34,22 +36,22 @@ def create_card(card_data):
     return card
 
 def get_card_by_id(card_id):
-    return Card.query.get(card_id)
+    return db.session.get(Card, card_id)
 
 def update_card(card_id, card_data):
-    card = Card.query.get(card_id)
-    for key, value in card_data.items():
-        setattr(card, key, value)
-    db.session.commit()
+    card = db.session.get(Card, card_id)
+    if card:
+        for key, value in card_data.items():
+            setattr(card, key, value)
+        db.session.commit()
     return card
 
 def delete_card(card_id):
-    card = Card.query.get(card_id)
-    db.session.delete(card)
-    db.session.commit()
-
-def get_all_cards():
-    return Card.query.all()
+    card = db.session.get(Card, card_id)
+    if card:
+        db.session.delete(card)
+        db.session.commit()
+    return card
 
 # CRUD functions for Orders
 def create_order(order_data):
@@ -74,26 +76,31 @@ def delete_order(order_id):
     db.session.commit()
 
 # CRUD functions for Payments
+def get_payment_by_id(payment_id):
+    return Payment.query.get(payment_id)
+
 def create_payment(payment_data):
     payment = Payment(**payment_data)
     db.session.add(payment)
     db.session.commit()
     return payment
 
-def get_payment_by_id(payment_id):
-    return Payment.query.get(payment_id)
-
 def update_payment(payment_id, payment_data):
-    payment = Payment.query.get(payment_id)
+    payment = get_payment_by_id(payment_id)
+    if not payment:
+        return None
     for key, value in payment_data.items():
         setattr(payment, key, value)
     db.session.commit()
     return payment
 
 def delete_payment(payment_id):
-    payment = Payment.query.get(payment_id)
+    payment = get_payment_by_id(payment_id)
+    if not payment:
+        return None
     db.session.delete(payment)
     db.session.commit()
+    return payment
 
 # CRUD functions for Inventory
 def create_inventory(inventory_data):
@@ -128,19 +135,22 @@ def create_admin(admin_data):
     return admin
 
 def get_admin_by_id(admin_id):
-    return Admin.query.get(admin_id)
+    return db.session.get(Admin, admin_id)
 
 def update_admin(admin_id, admin_data):
-    admin = Admin.query.get(admin_id)
-    for key, value in admin_data.items():
-        setattr(admin, key, value)
-    db.session.commit()
+    admin = db.session.get(Admin, admin_id)
+    if admin:
+        for key, value in admin_data.items():
+            setattr(admin, key, value)
+        db.session.commit()
     return admin
 
 def delete_admin(admin_id):
-    admin = Admin.query.get(admin_id)
-    db.session.delete(admin)
-    db.session.commit()
+    admin = db.session.get(Admin, admin_id)
+    if admin:
+        db.session.delete(admin)
+        db.session.commit()
+    return admin
 
 # CRUD functions for Cart
 def add_to_cart(user_id, card_id):

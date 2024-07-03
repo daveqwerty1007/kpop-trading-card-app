@@ -13,8 +13,6 @@ def create():
 @bp.route('/<int:admin_id>', methods=['GET'])
 def get(admin_id):
     admin = get_admin_by_id(admin_id)
-    if admin is None:
-        return jsonify({'message': 'Admin not found'}), 404
     return jsonify(AdminSchema.from_orm(admin).dict())
 
 @bp.route('/<int:admin_id>', methods=['PUT'])
@@ -26,4 +24,4 @@ def update(admin_id):
 @bp.route('/<int:admin_id>', methods=['DELETE'])
 def delete(admin_id):
     delete_admin(admin_id)
-    return jsonify({'message': 'Admin deleted'}), 204
+    return '', 204

@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
-from .database import init_db
+from .database import init_db,db
 from .routers import users, cards, orders, payments, inventory, admin
 from flask_login import LoginManager
 from .models import User
@@ -19,7 +19,6 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+mysqlconnector://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
-    db = SQLAlchemy(app)
     # Initialize the database
     init_db(app)
     

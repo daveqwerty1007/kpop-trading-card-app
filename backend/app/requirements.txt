@@ -1,7 +1,9 @@
 Flask==2.1.2
-SQLAlchemy==1.4.32
 Flask-SQLAlchemy==2.5.1
-PyMySQL==1.0.2
+SQLAlchemy==1.4.32
 Flask-Login==0.5.0
 pydantic==1.9.1
 pytest==7.1.2
+pytest-flask==1.2.0
+pymysql==1.0.2
+python-dotenv==0.20.0

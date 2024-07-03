@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from ..crud import create_user, get_user_by_id, update_user, delete_user
 from ..models import User
-from ..schemas import UserSchema as user_schema
+from ..schemas import UserSchema
 
 bp = Blueprint('users', __name__, url_prefix='/users')
 
@@ -34,22 +34,22 @@ def profile():
 def create():
     user_data = request.json
     user = create_user(user_data)
-    return jsonify(user_schema.dump(user)), 201
+    return jsonify(UserSchema.from_orm(user).dict()), 201
 
 @bp.route('/<int:user_id>', methods=['GET'])
 def get(user_id):
     user = get_user_by_id(user_id)
     if user is None:
         return jsonify({'message': 'User not found'}), 404
-    return jsonify(user_schema.dump(user))
+    return jsonify(UserSchema.from_orm(user).dict())
 
 @bp.route('/<int:user_id>', methods=['PUT'])
 def update(user_id):
     user_data = request.json
     user = update_user(user_id, user_data)
-    return jsonify(user_schema.dump(user))
+    return jsonify(UserSchema.from_orm(user).dict())
 
 @bp.route('/<int:user_id>', methods=['DELETE'])
 def delete(user_id):
     delete_user(user_id)
-    return jsonify({'message': 'User deleted'}), 204
+    return '', 204
