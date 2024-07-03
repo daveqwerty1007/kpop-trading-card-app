@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+<h1>Admin Panel</h1>
+<p>Manage the inventory, users, and orders from this panel.</p>
+<a href="{{ url_for('admin.manage_inventory') }}">Manage Inventory</a>
+<a href="{{ url_for('admin.manage_users') }}">Manage Users</a>
+<a href="{{ url_for('admin.manage_orders') }}">Manage Orders</a>
+{% endblock %}

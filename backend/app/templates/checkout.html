@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<h1>Checkout</h1>
+<form method="POST" action="{{ url_for('orders.checkout') }}">
+    <label for="payment_method">Payment Method:</label>
+    <select id="payment_method" name="payment_method" required>
+        <option value="credit_card">Credit Card</option>
+        <option value="paypal">PayPal</option>
+    </select>
+    <br>
+    <button type="submit">Complete Purchase</button>
+</form>
+{% endblock %}

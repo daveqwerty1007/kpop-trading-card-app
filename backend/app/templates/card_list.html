@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block title %}Card List{% endblock %}
+
+{% block content %}
+<h1>Card List</h1>
+<ul>
+    {% for card in cards %}
+    <li>
+        <a href="{{ url_for('cards.detail', card_id=card.id) }}">{{ card.card_name }}</a>
+        by {{ card.artist }} from {{ card.group }}
+        <p>{{ card.description }}</p>
+        <p>Price: ${{ card.price }}</p>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}
