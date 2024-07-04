@@ -42,5 +42,34 @@ def create_app():
     @app.route('/')
     def index():
         return render_template('index.html')  # Ensure you have an index.html in your templates folder
+    
+    @app.route('/admin_panel')
+    def admin_panel():
+        return render_template('admin_panel.html')
+
+    @app.route('/card_detail')
+    def card_detail():
+        return render_template('card_detail.html')
+
+    @app.route('/card_list')
+    def card_list():
+        return render_template('card_list.html')
+
+    @app.route('/cart')
+    def cart():
+        return render_template('cart.html')
+
+    @app.route('/checkout')
+    def checkout():
+        return render_template('checkout.html')
+
+    @app.route('/login')
+    def login():
+        return render_template('login.html')
+
+    @app.route('/user_profile')
+    def user_profile():
+        return render_template('user_profile.html')
+
 
     return app

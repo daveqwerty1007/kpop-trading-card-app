@@ -1,21 +1,14 @@
 {% extends "layout.html" %}
 
-{% block title %}Shopping Cart{% endblock %}
+{% block title %}Cart{% endblock %}
 
 {% block content %}
-<h1>Shopping Cart</h1>
-<ul>
-    {% for item in cart_items %}
-    <li>
-        {{ item.card.card_name }} - ${{ item.card.price }} x {{ item.quantity }}
-        <form method="POST" action="{{ url_for('orders.remove_from_cart', item_id=item.id) }}">
-            <button type="submit">Remove</button>
-        </form>
-    </li>
-    {% endfor %}
-</ul>
-<p>Total: ${{ total_amount }}</p>
-<form method="POST" action="{{ url_for('orders.checkout') }}">
-    <button type="submit">Checkout</button>
-</form>
+    <h2>Your Cart</h2>
+    <p>Review the items in your cart before checkout.</p>
+    <!-- Example of cart items -->
+    <ul>
+        <li>Card 1 - $10</li>
+        <li>Card 2 - $15</li>
+        <!-- Add more items as needed -->
+    </ul>
 {% endblock %}

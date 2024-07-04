@@ -3,22 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}K-Pop Trading Cards{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>{% block title %}K-pop Trading Card App{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <header>
+        <h1>K-pop Trading Card App</h1>
         <nav>
-            <a href="{{ url_for('main.index') }}">Home</a>
-            <a href="{{ url_for('users.profile') }}">Profile</a>
-            <a href="{{ url_for('cards.list') }}">Cards</a>
-            <a href="{{ url_for('orders.cart') }}">Cart</a>
-            <a href="{{ url_for('admin.panel') }}">Admin</a>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('admin_panel') }}">Admin Panel</a></li>
+                <li><a href="{{ url_for('card_list') }}">Card List</a></li>
+                <li><a href="{{ url_for('cart') }}">Cart</a></li>
+                <li><a href="{{ url_for('checkout') }}">Checkout</a></li>
+                <li><a href="{{ url_for('login') }}">Login</a></li>
+                <li><a href="{{ url_for('user_profile') }}">Profile</a></li>
+            </ul>
         </nav>
     </header>
     <main>
         {% block content %}{% endblock %}
     </main>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <footer>
+        <p>&copy; 2024 K-pop Trading Card App</p>
+    </footer>
 </body>
 </html>

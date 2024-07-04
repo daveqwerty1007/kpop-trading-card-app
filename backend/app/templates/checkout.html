@@ -3,14 +3,19 @@
 {% block title %}Checkout{% endblock %}
 
 {% block content %}
-<h1>Checkout</h1>
-<form method="POST" action="{{ url_for('orders.checkout') }}">
-    <label for="payment_method">Payment Method:</label>
-    <select id="payment_method" name="payment_method" required>
-        <option value="credit_card">Credit Card</option>
-        <option value="paypal">PayPal</option>
-    </select>
-    <br>
-    <button type="submit">Complete Purchase</button>
-</form>
+    <h2>Checkout</h2>
+    <p>Enter your details to complete the purchase.</p>
+    <!-- Example of checkout form -->
+    <form action="/checkout" method="post">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        <br>
+        <label for="address">Address:</label>
+        <input type="text" id="address" name="address" required>
+        <br>
+        <label for="payment">Payment Method:</label>
+        <input type="text" id="payment" name="payment" required>
+        <br>
+        <button type="submit">Submit</button>
+    </form>
 {% endblock %}

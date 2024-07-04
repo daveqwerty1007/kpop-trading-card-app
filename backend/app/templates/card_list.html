@@ -3,15 +3,13 @@
 {% block title %}Card List{% endblock %}
 
 {% block content %}
-<h1>Card List</h1>
-<ul>
-    {% for card in cards %}
-    <li>
-        <a href="{{ url_for('cards.detail', card_id=card.id) }}">{{ card.card_name }}</a>
-        by {{ card.artist }} from {{ card.group }}
-        <p>{{ card.description }}</p>
-        <p>Price: ${{ card.price }}</p>
-    </li>
-    {% endfor %}
-</ul>
+    <h2>Card List</h2>
+    <p>Here is a list of all K-pop trading cards.</p>
+    <!-- Example of card listing -->
+    <ul>
+        <li>Card 1</li>
+        <li>Card 2</li>
+        <li>Card 3</li>
+        <!-- Add more cards as needed -->
+    </ul>
 {% endblock %}
