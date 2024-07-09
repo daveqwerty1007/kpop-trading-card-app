@@ -66,7 +66,6 @@ class InventorySchema(BaseModel):
     def dict(self):
         return self.model_dump()
 
-
 class AdminSchema(BaseModel):
     id: int
     name: str
@@ -77,3 +76,32 @@ class AdminSchema(BaseModel):
         orm_mode = True
         from_attributes = True
 
+class CartItemBase(BaseModel):
+    user_id: int
+    card_id: int
+    quantity: int
+
+class CartItemCreate(CartItemBase):
+    pass
+
+class CartItem(CartItemBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+class OrderItemBase(BaseModel):
+    order_id: int
+    card_id: int
+    quantity: int
+
+class OrderItemCreate(OrderItemBase):
+    pass
+
+class OrderItem(OrderItemBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+        from_attributes = True

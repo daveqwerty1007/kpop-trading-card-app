@@ -1,12 +1,7 @@
 import React from 'react';
 
-function Home() {
-  return (
-    <div>
-      <h1>Welcome to K-Pop Trading Cards</h1>
-      <p>Explore and collect your favorite K-Pop trading cards!</p>
-    </div>
-  );
-}
+const Home = () => {
+  return <div>Welcome to the Kpop Trading Card App!</div>;
+};
 
 export default Home;

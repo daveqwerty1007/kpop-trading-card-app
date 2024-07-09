@@ -1,7 +1,7 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from .database import init_db,db
-from .routers import users, cards, orders, payments, inventory, admin
+from .routers import users, cards, orders, payments, inventory, admin, order_items, cart_items
 from flask_login import LoginManager
 from .models import User
 
@@ -37,6 +37,9 @@ def create_app():
     app.register_blueprint(payments.bp)
     app.register_blueprint(inventory.bp)
     app.register_blueprint(admin.bp)
+    app.register_blueprint(cart_items.bp) 
+    app.register_blueprint(order_items.bp)
+    
 
         # Define a route for the root URL
     @app.route('/')

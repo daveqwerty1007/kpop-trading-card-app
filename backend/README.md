@@ -1,6 +1,5 @@
-# K-pop Trading Card Selling Application
 
-This is a Business to Person (B2P) K-pop trading card selling web application built with Flask, MySQL, HTML, and JavaScript.
+# K-pop Trading Card Selling Application
 
 ## Features
 
@@ -12,7 +11,6 @@ This is a Business to Person (B2P) K-pop trading card selling web application bu
 ## Prerequisites
 
 - Docker
-- Docker Compose (optional, for running multi-container Docker applications)
 
 ## Setup
 
@@ -21,4 +19,80 @@ This is a Business to Person (B2P) K-pop trading card selling web application bu
 1. **Build the Docker image:**
 
    ```bash
+   pip install docker
    docker build -t kpop-trading-card-app .
+   ```
+
+2. **Run the Docker container:**
+
+   ```bash
+   docker run -d -p 5000:5000 kpop-trading-card-app
+   ```
+
+3. Open your web browser and go to `http://localhost:5000` to access the application.
+
+
+## Project Structure
+
+\`\`\`
+backend/
+│
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── models.py
+│   ├── database.py
+│   ├── schemas.py
+│   ├── crud.py
+│   ├── dependencies.py
+│   ├── routers/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── cards.py
+│   │   ├── cart_items.py
+│   │   ├── inventory.py
+│   │   ├── order_items.py
+│   │   ├── orders.py
+│   │   ├── payments.py
+│   │   ├── users.py
+│   ├── templates/
+│   │   ├── index.html
+│   │   ├── admin_panel.html
+│   │   ├── layout.html
+│   │   ├── user_profile.html
+│   │   ├── login.html
+│   │   ├── card_list.html
+│   │   ├── checkout.html
+│   │   ├── cart.html
+│   ├── static/
+│       ├── css/
+│       │   ├── styles.css
+│       ├── js/
+│       │   ├── main.js
+│       ├── image/
+│           ├── logo.png
+│           ├── default_card.jpg
+│
+├── tests/
+│   ├── __init__.py
+│   ├── test_admin.py
+│   ├── test_cards.py
+│   ├── test_cart_items.py
+│   ├── test_inventory.py
+│   ├── test_order_items.py
+│   ├── test_orders.py
+│   ├── test_payments.py
+│   ├── test_users.py
+│
+├── Dockerfile
+├── requirements.txt
+└── README.md
+\`\`\`
+
+## Running Tests
+
+To run the basic tests for each model CURD operation, use the following command:
+
+```bash
+pytest
+```

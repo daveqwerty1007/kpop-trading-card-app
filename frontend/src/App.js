@@ -1,33 +1,28 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import Navbar from './components/Navbar';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Header from './components/Header';
 import Home from './pages/Home';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import UserDashboard from './pages/UserDashboard';
-import CardPage from './pages/CardPage';
-import AdminPage from './pages/AdminPage';
-import Cart from './components/Cart';
-import Checkout from './components/Checkout';
+import Listings from './pages/Listings';
+import CardDetail from './pages/CardDetail';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import Login from './pages/Login';
+import './styles.css';
 
-function App() {
+const App = () => {
   return (
     <Router>
-      <div>
-        <Navbar />
-        <Switch>
-          <Route path="/" exact component={Home} />
-          <Route path="/about" component={About} />
-          <Route path="/contact" component={Contact} />
-          <Route path="/dashboard" component={UserDashboard} />
-          <Route path="/card/:id" component={CardPage} />
-          <Route path="/admin" component={AdminPage} />
-          <Route path="/cart" component={Cart} />
-          <Route path="/checkout" component={Checkout} />
-        </Switch>
-      </div>
+      <Header />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/listings" element={<Listings />} />
+        <Route path="/card/:id" element={<CardDetail />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/login" element={<Login />} />
+      </Routes>
     </Router>
   );
-}
+};
 
 export default App;

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for
 from flask_login import login_required, current_user
-from ..crud import create_order, get_order_by_id, update_order, delete_order, add_to_cart, remove_from_cart, get_cart_items, clear_cart, create_payment
+from ..crud import create_order, get_order_by_id, update_order, delete_order, update_cart_item, delete_cart_item, get_cart_items, clear_cart, create_payment
 from ..schemas import OrderSchema, PaymentSchema
 from datetime import datetime
 
@@ -49,16 +49,16 @@ def checkout():
 
     return render_template('checkout.html')
 
-@bp.route('/add_to_cart/<int:card_id>', methods=['POST'])
+@bp.route('/update_cart_item/<int:card_id>', methods=['POST'])
 @login_required
-def add_to_cart_route(card_id):
-    add_to_cart(current_user.id, card_id)
+def update_cart_item_route(card_id):
+    update_cart_item(current_user.id, card_id)
     return redirect(url_for('orders.cart'))
 
-@bp.route('/remove_from_cart/<int:item_id>', methods=['POST'])
+@bp.route('/delete_cart_item/<int:item_id>', methods=['POST'])
 @login_required
-def remove_from_cart_route(item_id):
-    remove_from_cart(current_user.id, item_id)
+def delete_cart_item_route(item_id):
+    delete_cart_item(current_user.id, item_id)
     return redirect(url_for('orders.cart'))
 
 @bp.route('/', methods=['POST'])
