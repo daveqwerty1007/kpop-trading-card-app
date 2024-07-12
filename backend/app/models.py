@@ -48,14 +48,9 @@ class CartItem(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     card_id = db.Column(db.Integer, db.ForeignKey('card.id'), nullable=False)
     quantity = db.Column(db.Integer, nullable=False, default=1)
-    user = db.relationship('User', backref=db.backref('cart_item', lazy=True))
-    card = db.relationship('Card', backref=db.backref('cart_item', lazy=True))
 
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True, index=True)
     order_id = db.Column(db.Integer, db.ForeignKey("order.id"))
     card_id = db.Column(db.Integer, db.ForeignKey("card.id"))
     quantity = db.Column(db.Integer, nullable=False)
-    
-    order = db.relationship("Order", back_populates="order_item")
-    card = db.relationship("Card", back_populates="order_item")
