@@ -20,7 +20,7 @@
 
    ```bash
    pip install docker
-   docker build -t kpop-trading-card-app .
+   docker build -t kpop-trading-app ./backend
    ```
 
 2. **Run the Docker container:**

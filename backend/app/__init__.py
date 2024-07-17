@@ -1,9 +1,10 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
+
 from .database import init_db,db
 from .routers import users, cards, orders, payments, inventory, admin, order_items, cart_items
 from flask_login import LoginManager
-from .models import User
+from .models import *
 
 def create_app():
     app = Flask(__name__)
@@ -14,7 +15,7 @@ def create_app():
     'user': 'admin',
     'password': 'nCbx9SyJPoUXXT8zcw4d',
     'database': 'kpop_trading'
-}
+    }
 
     app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+mysqlconnector://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}"
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -40,39 +41,15 @@ def create_app():
     app.register_blueprint(cart_items.bp) 
     app.register_blueprint(order_items.bp)
     
-
-        # Define a route for the root URL
     @app.route('/')
     def index():
-        return render_template('index.html')  # Ensure you have an index.html in your templates folder
-    
-    @app.route('/admin_panel')
-    def admin_panel():
-        return render_template('admin_panel.html')
-
-    @app.route('/card_detail')
-    def card_detail():
-        return render_template('card_detail.html')
-
-    @app.route('/card_list')
-    def card_list():
-        return render_template('card_list.html')
-
-    @app.route('/cart')
-    def cart():
-        return render_template('cart.html')
-
-    @app.route('/checkout')
-    def checkout():
-        return render_template('checkout.html')
-
-    @app.route('/login')
-    def login():
-        return render_template('login.html')
-
-    @app.route('/user_profile')
-    def user_profile():
-        return render_template('user_profile.html')
+        users = session.query(User).all()
+        cards = session.query(Card).all()
+        session.close()
+        return render_template('index.html', users=users, cards=cards)
 
 
     return app
+
+if __name__ == '__main__':
+    app.run(debug=True)

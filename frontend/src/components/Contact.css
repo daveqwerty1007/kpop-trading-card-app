@@ -1,0 +1,27 @@
+.contact {
+  padding: 2rem;
+  text-align: center;
+}
+.contact h1 {
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: bold;
+}
+.contact-links {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.contact-button {
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 1rem;
+}
+.contact-button:hover {
+  background-color: #0056b3;
+}

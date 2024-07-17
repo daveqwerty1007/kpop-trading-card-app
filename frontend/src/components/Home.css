@@ -1,0 +1,20 @@
+.home {
+    padding: 1rem 2rem;
+  }
+  .recommend, .popular, .browse {
+    margin: 2rem 0;
+  }
+  .browse-links {
+    display: flex;
+    gap: 1rem;
+  }
+  .browse-links a {
+    padding: 0.5rem 1rem;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+  }
+  .browse-links a:hover {
+    background-color: #0056b3;
+  }

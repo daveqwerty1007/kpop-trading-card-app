@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Delete Entry{% endblock %}
+{% block content %}
+<h2>Delete Entry</h2>
+<p>Are you sure you want to delete "{{ entry.name }}"?</p>
+<form action="{{ url_for('delete_entry', id=entry.id) }}" method="POST">
+    <button type="submit">Delete</button>
+</form>
+{% endblock %}

@@ -1,0 +1,110 @@
+/* src/components/Recommend.css */
+.recommend-page {
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    grid-template-columns: 1fr;
+    height: 100vh;
+  }
+  .header {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+  }
+  .navbar {
+    background-color: #e9ecef;
+    padding: 1rem;
+    text-align: center;
+    margin-top: 3.5rem; /* To adjust for fixed header */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .navbar-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 1rem;
+  }
+  .navbar-links li {
+    margin: 0 0.5rem;
+  }
+  .navbar-links a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+  }
+  .navbar-icons {
+    display: flex;
+    gap: 1rem;
+  }
+  .navbar-button {
+    padding: 0.5rem 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1rem;
+  }
+  .navbar-button:hover {
+    background-color: #0056b3;
+  }
+  .recommend-content {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    overflow: hidden;
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+  .recommend-filter {
+    background-color: #f1f3f5;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+  .filter-group {
+    margin-bottom: 1rem;
+  }
+  .filter-group h3 {
+    margin-bottom: 0.5rem;
+  }
+  .filter-group ul {
+    list-style: none;
+    padding: 0;
+  }
+  .filter-group li {
+    margin-bottom: 0.5rem;
+  }
+  .recommend-items {
+    padding: 1rem;
+    overflow-y: auto;
+  }
+  .sort-by {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .sort-by label {
+    margin-right: 0.5rem;
+  }
+  .items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  .item-card {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    padding: 1rem;
+    text-align: center;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
