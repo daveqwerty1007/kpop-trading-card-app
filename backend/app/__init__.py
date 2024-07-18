@@ -41,15 +41,6 @@ def create_app():
     app.register_blueprint(cart_items.bp) 
     app.register_blueprint(order_items.bp)
     
-    @app.route('/')
-    def index():
-        users = session.query(User).all()
-        cards = session.query(Card).all()
-        session.close()
-        return render_template('index.html', users=users, cards=cards)
-
-
-    return app
 
 if __name__ == '__main__':
     app.run(debug=True)
