@@ -1,0 +1,58 @@
+.card-page {
+    display: flex;
+    padding: 20px;
+  }
+  
+  .filter {
+    width: 200px;
+    margin-right: 20px;
+    background-color: #f8f9fa; /* Light grey background for the filter bar */
+    padding: 10px; /* Add padding for better spacing */
+    border-radius: 8px; /* Rounded corners for better aesthetics */
+  }
+  
+  .filter h3 {
+    margin-top: 0;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .filter label {
+    display: block;
+    margin-bottom: 10px;
+  }
+  
+  .products {
+    flex-grow: 1;
+  }
+  
+  .sort {
+    margin-bottom: 20px;
+    display: flex; /* Use flex to align items */
+    align-items: center; /* Align items vertically */
+  }
+  
+  .sort label {
+    margin-left: auto; /* Push the label to the right */
+    display: flex; /* Use flex to align the label and select element */
+    align-items: center; /* Align items vertically */
+  }
+  
+  .sort select {
+    margin-left: 10px; /* Add space between the label and the dropdown */
+  }
+  
+  .product-list {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .product-item {
+    border: 1px solid #ccc;
+    padding: 10px;
+    width: 100px;
+    text-align: center;
+  }
+  

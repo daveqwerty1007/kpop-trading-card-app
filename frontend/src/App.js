@@ -1,4 +1,3 @@
-// src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Header from './components/Header';
@@ -10,8 +9,8 @@ import Login from './components/Login';
 import Contact from './components/Contact';
 import About from './components/About';
 import Privacy from './components/Privacy';
-import Recommend from './components/Recommend';
-import Popular from './components/Popular';
+import Card from './components/Card';
+import Test from './test';
 
 const App = () => {
   return (
@@ -25,8 +24,8 @@ const App = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/about" element={<About />} />
         <Route path="/privacy" element={<Privacy />} />
-        <Route path="/recommend" element={<Recommend />} />
-        <Route path="/popular" element={<Popular />} />
+        <Route path="/card" element={<Card />} />
+        <Route path="/test" element={< Test/>} />
         {/* Add other routes here */}
       </Routes>
       <Footer />
