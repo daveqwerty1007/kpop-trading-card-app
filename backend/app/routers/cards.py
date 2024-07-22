@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from ..crud import create_card, get_card_by_id, update_card, delete_card
+from ..crud import create_card, get_card_by_id, update_card, delete_card, get_all_cards
 from ..schemas import CardSchema
 
 bp = Blueprint('cards', __name__, url_prefix='/cards')
@@ -25,3 +25,10 @@ def update(card_id):
 def delete(card_id):
     delete_card(card_id)
     return '', 204
+
+@bp.route('/', methods=['GET'])
+def list_all():
+    cards = get_all_cards()
+    print(cards) 
+    card_schema = CardSchema(many=True)
+    return jsonify(card_schema.dump(cards))

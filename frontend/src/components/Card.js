@@ -1,12 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Card.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { Link } from 'react-router-dom';
 
 function Card() {
   const [artistCollapsed, setArtistCollapsed] = useState(false);
   const [groupCollapsed, setGroupCollapsed] = useState(false);
   const [albumCollapsed, setAlbumCollapsed] = useState(false);
   const [priceCollapsed, setPriceCollapsed] = useState(false);
+  const [cards, setCards] = useState([]);
+  const [artists, setArtists] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [albums, setAlbums] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Fetch cards from the backend
+    fetch('/api/cards')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setCards(data);
+        // Extract unique artists, groups, and albums from the fetched cards
+        const uniqueArtists = [...new Set(data.map(card => card.artist))];
+        const uniqueGroups = [...new Set(data.map(card => card.group))];
+        const uniqueAlbums = [...new Set(data.map(card => card.album))];
+        setArtists(uniqueArtists);
+        setGroups(uniqueGroups);
+        setAlbums(uniqueAlbums);
+      })
+      .catch(error => {
+        console.error('Error fetching cards:', error);
+        setError('Error fetching cards. Please try again later.');
+      });
+  }, []);
 
   return (
     <div className="card-page">
@@ -17,15 +48,11 @@ function Card() {
         </h3>
         {!artistCollapsed && (
           <div className="filter-section">
-            <label>
-              <input type="checkbox" name="artist1" /> Artist 1
-            </label>
-            <label>
-              <input type="checkbox" name="artist2" /> Artist 2
-            </label>
-            <label>
-              <input type="checkbox" name="artist3" /> Artist 3
-            </label>
+            {artists.map((artist, index) => (
+              <label key={index}>
+                <input type="checkbox" name={`artist${index}`} /> {artist}
+              </label>
+            ))}
           </div>
         )}
 
@@ -35,12 +62,11 @@ function Card() {
         </h3>
         {!groupCollapsed && (
           <div className="filter-section">
-            <label>
-              <input type="checkbox" name="group1" /> Group 1
-            </label>
-            <label>
-              <input type="checkbox" name="group2" /> Group 2
-            </label>
+            {groups.map((group, index) => (
+              <label key={index}>
+                <input type="checkbox" name={`group${index}`} /> {group}
+              </label>
+            ))}
           </div>
         )}
 
@@ -50,12 +76,11 @@ function Card() {
         </h3>
         {!albumCollapsed && (
           <div className="filter-section">
-            <label>
-              <input type="checkbox" name="album1" /> Album 1
-            </label>
-            <label>
-              <input type="checkbox" name="album2" /> Album 2
-            </label>
+            {albums.map((album, index) => (
+              <label key={index}>
+                <input type="checkbox" name={`album${index}`} /> {album}
+              </label>
+            ))}
           </div>
         )}
 
@@ -66,10 +91,19 @@ function Card() {
         {!priceCollapsed && (
           <div className="filter-section">
             <label>
-              <input type="checkbox" name="price1" /> 0-100
+              <input type="checkbox" name="price1" /> 0-20
             </label>
             <label>
-              <input type="checkbox" name="price2" /> 100-200
+              <input type="checkbox" name="price2" /> 20-40
+            </label>
+            <label>
+              <input type="checkbox" name="price3" /> 40-60
+            </label>
+            <label>
+              <input type="checkbox" name="price4" /> 60-80
+            </label>
+            <label>
+              <input type="checkbox" name="price5" /> 80-100
             </label>
           </div>
         )}
@@ -79,7 +113,7 @@ function Card() {
           <label>
             Sort by:
             <select>
-              <option value="popularity">Recommend</option>
+              <option value="recommend">Recommend</option>
               <option value="popularity">Most Popular</option>
               <option value="newest">Newest</option>
               <option value="priceLowToHigh">Price: Low to High</option>
@@ -88,10 +122,20 @@ function Card() {
           </label>
         </div>
         <div className="product-list">
-          <div className="product-item">Item 1</div>
-          <div className="product-item">Item 2</div>
-          <div className="product-item">Item 3</div>
-          <div className="product-item">Item 4</div>
+          {error ? (
+            <div className="error">{error}</div>
+          ) : (
+            cards.map(card => (
+              <Link to={`/card/${card.id}`} key={card.id} className="product-item">
+                <img src={card.image_url} alt={card.card_name} className="card-image" />
+                <div className="card-details">
+                  <h2 className="card-name">{card.card_name}</h2>
+                  <p className="card-price">${card.price}</p>
+                  <p className="card-description">{card.description}</p>
+                </div>
+              </Link>
+            ))
+          )}
         </div>
       </div>
     </div>

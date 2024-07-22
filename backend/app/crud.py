@@ -52,6 +52,9 @@ def delete_card(card_id):
         db.session.commit()
     return card
 
+def get_all_cards():
+    return db.session.query(Card).all()
+
 # Order CRUD operations
 def create_order(order_data):
     order = Order(**order_data)

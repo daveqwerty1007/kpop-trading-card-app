@@ -10,7 +10,7 @@ import Contact from './components/Contact';
 import About from './components/About';
 import Privacy from './components/Privacy';
 import Card from './components/Card';
-import Test from './test';
+import CardDetail from './components/CardDetail';
 
 const App = () => {
   return (
@@ -25,7 +25,7 @@ const App = () => {
         <Route path="/about" element={<About />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/card" element={<Card />} />
-        <Route path="/test" element={< Test/>} />
+        <Route path="/card/:id" component={CardDetail} />
         {/* Add other routes here */}
       </Routes>
       <Footer />
