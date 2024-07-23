@@ -26,7 +26,7 @@
 2. **Run the Docker container:**
 
    ```bash
-   docker run -d -p 5000:5000 kpop-trading-card-app
+   docker run -d -p 5000:5000 kpop-trading-app
    ```
 
 3. Open your web browser and go to `http://localhost:5000` to access the application.

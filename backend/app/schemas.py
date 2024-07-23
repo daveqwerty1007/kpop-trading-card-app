@@ -10,27 +10,19 @@ class UserSchema(BaseModel):
 
     class Config:
         orm_mode = True
-        from_attributes = True
-
-    @classmethod
-    def from_orm(cls, obj):
-        return cls.model_validate(obj)
-
-    def dict(self):
-        return self.model_dump()
 
 class CardSchema(BaseModel):
     id: int
     card_name: str
     artist: str
     group: str
-    album: str
+    album: Optional[str] = None
     price: float
-    description: str
-    image_url: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class OrderSchema(BaseModel):
     id: int

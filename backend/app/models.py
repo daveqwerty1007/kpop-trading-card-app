@@ -8,6 +8,25 @@ class User(db.Model):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
 
+    @property
+    def is_admin(self):
+        return False
+    
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_authenticated(self):
+        return False
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.id)
+
 class Card(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     card_name = db.Column(db.String(150), nullable=False)
@@ -37,11 +56,30 @@ class Inventory(db.Model):
     quantity_available = db.Column(db.Integer, nullable=False)
 
 
-class Admin(db.Model):
+class Admin(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(150))
-    email = db.Column(db.String(150), unique=True)
-    password = db.Column(db.String(150))
+    name = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(150), nullable=False)
+
+    @property
+    def is_admin(self):
+        return True
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.id)
 
 class CartItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
