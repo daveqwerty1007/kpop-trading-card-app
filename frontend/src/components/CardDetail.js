@@ -1,28 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import './CardDetail.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 function CardDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [card, setCard] = useState(null);
+  const [relatedCards, setRelatedCards] = useState([]);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
-    fetch(`/api/cards/${id}`)
+    fetchCardData();
+  }, [id]);
+
+  const fetchCardData = () => {
+    fetch(`http://localhost:5001/cards/${id}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         return response.json();
       })
-      .then(data => setCard(data))
+      .then(data => {
+        setCard(data);
+        fetchRelatedCards(data.artist.split(' ')[0]);
+      })
       .catch(error => {
         console.error('Error fetching card:', error);
         setError('Error fetching card. Please try again later.');
       });
-  }, [id]);
+  };
+
+  const fetchRelatedCards = (artistFirstName) => {
+    fetch(`http://localhost:5001/cards/search?q=${artistFirstName}`)
+      .then(response => response.json())
+      .then(data => {
+        setRelatedCards(data.filter(relatedCard => relatedCard.id !== parseInt(id)));
+      })
+      .catch(error => {
+        console.error('Error fetching related cards:', error);
+      });
+  };
 
   const handleAddToCart = () => {
     // Logic to add the item to the cart
@@ -31,6 +51,10 @@ function CardDetail() {
 
   const handleQuantityChange = (change) => {
     setQuantity(prevQuantity => Math.max(1, prevQuantity + change));
+  };
+
+  const handleRelatedCardClick = (relatedCardId) => {
+    navigate(`/card/${relatedCardId}`);
   };
 
   if (error) {
@@ -73,10 +97,15 @@ function CardDetail() {
       <div className="related-cards">
         <h3>Also from {card.artist}</h3>
         <div className="related-cards-list">
-          {card.relatedCards.map((relatedCard, index) => (
-            <div className="related-card-item" key={index}>
-              <img src={relatedCard.image_url} alt={relatedCard.name} />
-              <p>{relatedCard.name}</p>
+          {relatedCards.map((relatedCard) => (
+            <div
+              className="related-card-item"
+              key={relatedCard.id}
+              onClick={() => handleRelatedCardClick(relatedCard.id)}
+              style={{ cursor: 'pointer' }}
+            >
+              <img src={relatedCard.image_url} alt={relatedCard.card_name} />
+              <p>{relatedCard.card_name}</p>
             </div>
           ))}
         </div>

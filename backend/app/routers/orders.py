@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify, render_template, redirect, url_for
 from flask_login import login_required, current_user
 from pydantic import ValidationError
+
+from ..utils import admin_required
 from ..crud import create_order, get_order_by_id, update_order, delete_order, update_cart_item, delete_cart_item, get_cart_items, clear_cart, create_payment
 from ..schemas import OrderSchema, PaymentSchema
 from datetime import datetime
@@ -19,23 +21,17 @@ def cart():
 def checkout():
     if request.method == 'POST':
         try:
-            # Retrieve cart items
             cart_items = get_cart_items(current_user.id)
             if not cart_items:
                 return jsonify({'message': 'Cart is empty'}), 400
             
-            # Calculate total amount
             total_amount = sum(item.card.price * item.quantity for item in cart_items)
-            
-            # Create order
             order_data = {
                 'user_id': current_user.id,
                 'order_date': datetime.utcnow(),
                 'total_amount': total_amount
             }
             order = create_order(order_data)
-            
-            # Create payment (assuming payment is successful for this example)
             payment_data = {
                 'order_id': order.id,
                 'payment_date': datetime.utcnow(),
@@ -43,14 +39,15 @@ def checkout():
                 'payment_status': 'Completed'
             }
             create_payment(payment_data)
-            
-            # Clear the cart
+
             clear_cart(current_user.id)
             
             return jsonify({'message': 'Checkout successful'}), 200
 
         except ValidationError as e:
             return jsonify(e.errors()), 400
+        except Exception as e:
+            return jsonify({'message': str(e)}), 500
 
     return render_template('checkout.html')
 
@@ -63,6 +60,8 @@ def update_cart_item_route(card_id):
         return redirect(url_for('orders.cart'))
     except ValidationError as e:
         return jsonify(e.errors()), 400
+    except Exception as e:
+        return jsonify({'message': str(e)}), 500
 
 @bp.route('/delete_cart_item/<int:card_id>', methods=['POST'])
 @login_required
@@ -72,8 +71,12 @@ def delete_cart_item_route(card_id):
         return redirect(url_for('orders.cart'))
     except ValidationError as e:
         return jsonify(e.errors()), 400
+    except Exception as e:
+        return jsonify({'message': str(e)}), 500
 
 @bp.route('/<int:order_id>', methods=['GET'])
+@login_required
+@admin_required
 def detail(order_id):
     try:
         order = get_order_by_id(order_id)
@@ -82,6 +85,8 @@ def detail(order_id):
         return jsonify(OrderSchema.from_orm(order).dict())
     except ValidationError as e:
         return jsonify(e.errors()), 400
+    except Exception as e:
+        return jsonify({'message': str(e)}), 500
 
 @bp.route('/<int:order_id>', methods=['PUT'])
 def update(order_id):
@@ -91,6 +96,8 @@ def update(order_id):
         return jsonify(OrderSchema.from_orm(order).dict())
     except ValidationError as e:
         return jsonify(e.errors()), 400
+    except Exception as e:
+        return jsonify({'message': str(e)}), 500
 
 @bp.route('/<int:order_id>', methods=['DELETE'])
 def delete(order_id):
@@ -99,3 +106,5 @@ def delete(order_id):
         return jsonify({'message': 'Order deleted'}), 204
     except ValidationError as e:
         return jsonify(e.errors()), 400
+    except Exception as e:
+        return jsonify({'message': str(e)}), 500

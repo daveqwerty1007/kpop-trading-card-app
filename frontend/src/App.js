@@ -25,7 +25,7 @@ const App = () => {
         <Route path="/about" element={<About />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/card" element={<Card />} />
-        <Route path="/card/:id" component={CardDetail} />
+        <Route path="/card/:id" element={<CardDetail />} />
         {/* Add other routes here */}
       </Routes>
       <Footer />

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Showcase</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .card-item {
+            margin: 20px;
+            width: 300px;
+        }
+        .card img {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+    <script>
+        function addToCart(cardId) {
+            fetch(`/cart_items/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ card_id: cardId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                } else {
+                    alert('Added to cart successfully!');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center">Card Showcase</h1>
+        <div class="card-container">
+            {% for card in cards %}
+            <div class="card-item">
+                <div class="card">
+                    <a href="{{ url_for('cards.detail', card_id=card.id) }}">
+                        <img src="{{ card.image_url }}" class="card-img-top" alt="{{ card.name }}">
+                    </a>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ card.name }}</h5>
+                        <p class="card-text">{{ card.description }}</p>
+                        <p class="card-text"><strong>Price:</strong> ${{ card.price }}</p>
+                        <a href="{{ url_for('cards.detail', card_id=card.id) }}" class="btn btn-primary">View Details</a>
+                        <button onclick="addToCart({{ card.id }})" class="btn btn-success">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

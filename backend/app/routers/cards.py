@@ -1,7 +1,8 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, render_template, request, jsonify
 from pydantic import ValidationError
-from ..crud import create_card, get_card_by_id, update_card, delete_card, get_all_cards
+from ..crud import create_card, get_card_by_id, get_filter_options, search_cards, update_card, delete_card, get_all_cards
 from ..schemas import CardSchema
+from ..models import Card
 
 bp = Blueprint('cards', __name__, url_prefix='/cards')
 
@@ -23,7 +24,9 @@ def detail(card_id):
             return jsonify({'message': 'Card not found'}), 404
         return jsonify(CardSchema.from_orm(card).dict())
     except ValidationError as e:
-        return jsonify(e.errors()), 400
+        return jsonify({'errors': e.errors()}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @bp.route('/<int:card_id>', methods=['PUT'])
 def update(card_id):
@@ -45,11 +48,38 @@ def delete(card_id):
         return '', 204
     except ValidationError as e:
         return jsonify(e.errors()), 400
+    
+@bp.route('/list', methods=['GET'])
+def list_cards():
+    artist = request.args.get('artist')
+    group = request.args.get('group')
+    album = request.args.get('album')
+    min_price = request.args.get('min_price', type=float)
+    max_price = request.args.get('max_price', type=float)
+    sort_by = request.args.get('sort_by')
 
-@bp.route('/', methods=['GET'])
-def list_all():
     try:
-        cards = get_all_cards()
+        cards = get_all_cards(artist=artist, group=group, album=album, min_price=min_price, max_price=max_price, sort_by=sort_by)
         return jsonify([CardSchema.from_orm(card).dict() for card in cards])
     except ValidationError as e:
         return jsonify(e.errors()), 400
+
+@bp.route('/filter-options', methods=['GET'])
+def filter_options():
+    try:
+        options = get_filter_options()
+        return jsonify(options)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500   
+    
+@bp.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('q')
+    if not query:
+        return jsonify([]), 200
+    
+    try:
+        results = search_cards(query)
+        return jsonify([CardSchema.from_orm(card).dict() for card in results])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

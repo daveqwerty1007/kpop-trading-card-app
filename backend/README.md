@@ -26,10 +26,10 @@
 2. **Run the Docker container:**
 
    ```bash
-   docker run -d -p 5000:5000 kpop-trading-app
+   docker run -d -p 5001:5000 kpop-trading-app
    ```
 
-3. Open your web browser and go to `http://localhost:5000` to access the application.
+3. Open your web browser and go to `http://localhost:5001` to access the application.
 
 
 ## Project Structure

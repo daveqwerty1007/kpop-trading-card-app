@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for
+from flask import Blueprint, flash, request, jsonify, render_template, redirect, url_for
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from pydantic import ValidationError
@@ -38,7 +38,7 @@ def login():
         if user and check_password_hash(user.password, password):
             login_user(user)
             return redirect(url_for('users.profile'))
-        return jsonify({'message': 'Invalid credentials'}), 401
+        flash('Invalid credentials', 'danger')
     return render_template('login.html')
 
 @bp.route('/profile')
@@ -65,7 +65,6 @@ def create():
         return jsonify(e.errors()), 400
 
 @bp.route('/<int:user_id>', methods=['GET'])
-@admin_required
 def get(user_id):
     try:
         user = get_user_by_id(user_id)
@@ -76,7 +75,6 @@ def get(user_id):
         return jsonify(e.errors()), 400
 
 @bp.route('/<int:user_id>', methods=['PUT'])
-@admin_required
 def update(user_id):
     try:
         user_data = request.json
@@ -89,11 +87,9 @@ def update(user_id):
         return jsonify(e.errors()), 400
 
 @bp.route('/<int:user_id>', methods=['DELETE'])
-@admin_required
 def delete(user_id):
     try:
         delete_user(user_id)
         return '', 204
     except ValidationError as e:
         return jsonify(e.errors()), 400
-

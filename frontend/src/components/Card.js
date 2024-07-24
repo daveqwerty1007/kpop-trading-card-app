@@ -1,145 +1,277 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom'; 
 import './Card.css';
-import '@fortawesome/fontawesome-free/css/all.min.css';
-import { Link } from 'react-router-dom';
 
-function Card() {
-  const [artistCollapsed, setArtistCollapsed] = useState(false);
-  const [groupCollapsed, setGroupCollapsed] = useState(false);
-  const [albumCollapsed, setAlbumCollapsed] = useState(false);
-  const [priceCollapsed, setPriceCollapsed] = useState(false);
+const CardList = () => {
   const [cards, setCards] = useState([]);
-  const [artists, setArtists] = useState([]);
-  const [groups, setGroups] = useState([]);
-  const [albums, setAlbums] = useState([]);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
+  const [filters, setFilters] = useState({
+    artist: [],
+    group: [],
+    album: [],
+    min_price: '',
+    max_price: '',
+    sort_by: ''
+  });
+  const [filterOptions, setFilterOptions] = useState({
+    artists: [],
+    groups: [],
+    albums: []
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [collapsedSections, setCollapsedSections] = useState({
+    artist: false,
+    group: false,
+    album: false,
+    price: false
+  });
+  const cardsPerPage = 10;
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // Fetch cards from the backend
-    fetch('/api/cards')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
+    const params = new URLSearchParams(location.search);
+    const sortBy = params.get('sort_by');
+    if (sortBy) {
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        sort_by: sortBy
+      }));
+    }
+    fetchFilteredCards();
+    fetchFilterOptions();
+  }, [filters, currentPage]);
+
+  const fetchFilteredCards = () => {
+    let url = 'http://localhost:5001/cards/list';
+    const params = new URLSearchParams({
+      ...filters,
+      artist: filters.artist.join(','),
+      group: filters.group.join(','),
+      album: filters.album.join(','),
+      page: currentPage,
+      limit: cardsPerPage
+    });
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+
+    fetch(url)
+      .then(response => response.json())
       .then(data => {
-        setCards(data);
-        // Extract unique artists, groups, and albums from the fetched cards
-        const uniqueArtists = [...new Set(data.map(card => card.artist))];
-        const uniqueGroups = [...new Set(data.map(card => card.group))];
-        const uniqueAlbums = [...new Set(data.map(card => card.album))];
-        setArtists(uniqueArtists);
-        setGroups(uniqueGroups);
-        setAlbums(uniqueAlbums);
+        if (Array.isArray(data)) {
+          setCards(data);
+          setTotalPages(Math.ceil(data.total / cardsPerPage));
+          setError('');
+        } else {
+          setError('Unexpected response format');
+        }
       })
       .catch(error => {
         console.error('Error fetching cards:', error);
-        setError('Error fetching cards. Please try again later.');
+        setError('Failed to load cards');
       });
-  }, []);
+  };
+
+  const fetchFilterOptions = () => {
+    fetch('http://localhost:5001/cards/filter-options')
+      .then(response => response.json())
+      .then(data => {
+        setFilterOptions({
+          artists: data.artists || [],
+          groups: data.groups || [],
+          albums: data.albums || []
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching filter options:', error);
+      });
+  };
+
+  const handleCheckboxChange = (event) => {
+    const { name, value, checked } = event.target;
+    setFilters(prevFilters => {
+      const values = checked
+        ? [...prevFilters[name], value]
+        : prevFilters[name].filter(v => v !== value);
+      return { ...prevFilters, [name]: values };
+    });
+  };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFilters(prevFilters => ({ ...prevFilters, [name]: value }));
+  };
+
+  const handleSortChange = (event) => {
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      sort_by: event.target.value
+    }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      artist: [],
+      group: [],
+      album: [],
+      min_price: '',
+      max_price: '',
+      sort_by: ''
+    });
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  const toggleSection = (section) => {
+    setCollapsedSections(prevState => ({
+      ...prevState,
+      [section]: !prevState[section]
+    }));
+  };
+
+  const handleCardClick = (cardId) => {
+    navigate(`/card/${cardId}`);
+  };
 
   return (
     <div className="card-page">
-      <div className="filter">
-        <h3 onClick={() => setArtistCollapsed(!artistCollapsed)}>
-          Artist
-          <i className={`fas ${artistCollapsed ? 'fa-chevron-right' : 'fa-chevron-down'}`} style={{ marginLeft: '10px' }}></i>
-        </h3>
-        {!artistCollapsed && (
-          <div className="filter-section">
-            {artists.map((artist, index) => (
-              <label key={index}>
-                <input type="checkbox" name={`artist${index}`} /> {artist}
+      <div className="filter-bar">
+        <div className="filter-header">
+          <h3>Filter by:</h3>
+          <button type="button" onClick={handleClearFilters} className="clear-button">Clear Filters</button>
+        </div>
+        <div className="filter-section">
+          <h4 onClick={() => toggleSection('artist')}>Artists {collapsedSections.artist ? '+' : '-'}</h4>
+          {!collapsedSections.artist && (
+            <div>
+              {filterOptions.artists.map((artist, index) => (
+                <label key={index}>
+                  <input
+                    type="checkbox"
+                    name="artist"
+                    value={artist}
+                    checked={filters.artist.includes(artist)}
+                    onChange={handleCheckboxChange}
+                  />
+                  {artist}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="filter-section">
+          <h4 onClick={() => toggleSection('group')}>Groups {collapsedSections.group ? '+' : '-'}</h4>
+          {!collapsedSections.group && (
+            <div>
+              {filterOptions.groups.map((group, index) => (
+                <label key={index}>
+                  <input
+                    type="checkbox"
+                    name="group"
+                    value={group}
+                    checked={filters.group.includes(group)}
+                    onChange={handleCheckboxChange}
+                  />
+                  {group}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="filter-section">
+          <h4 onClick={() => toggleSection('album')}>Albums {collapsedSections.album ? '+' : '-'}</h4>
+          {!collapsedSections.album && (
+            <div>
+              {filterOptions.albums.map((album, index) => (
+                <label key={index}>
+                  <input
+                    type="checkbox"
+                    name="album"
+                    value={album}
+                    checked={filters.album.includes(album)}
+                    onChange={handleCheckboxChange}
+                  />
+                  {album}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="filter-section">
+          <h4 onClick={() => toggleSection('price')}>Price Range {collapsedSections.price ? '+' : '-'}</h4>
+          {!collapsedSections.price && (
+            <div>
+              <label>
+                Min Price:
+                <input
+                  type="number"
+                  name="min_price"
+                  value={filters.min_price}
+                  onChange={handleInputChange}
+                  placeholder="Min"
+                />
               </label>
-            ))}
-          </div>
-        )}
-
-        <h3 onClick={() => setGroupCollapsed(!groupCollapsed)}>
-          Group
-          <i className={`fas ${groupCollapsed ? 'fa-chevron-right' : 'fa-chevron-down'}`} style={{ marginLeft: '10px' }}></i>
-        </h3>
-        {!groupCollapsed && (
-          <div className="filter-section">
-            {groups.map((group, index) => (
-              <label key={index}>
-                <input type="checkbox" name={`group${index}`} /> {group}
+              <label>
+                Max Price:
+                <input
+                  type="number"
+                  name="max_price"
+                  value={filters.max_price}
+                  onChange={handleInputChange}
+                  placeholder="Max"
+                />
               </label>
-            ))}
-          </div>
-        )}
-
-        <h3 onClick={() => setAlbumCollapsed(!albumCollapsed)}>
-          Album
-          <i className={`fas ${albumCollapsed ? 'fa-chevron-right' : 'fa-chevron-down'}`} style={{ marginLeft: '10px' }}></i>
-        </h3>
-        {!albumCollapsed && (
-          <div className="filter-section">
-            {albums.map((album, index) => (
-              <label key={index}>
-                <input type="checkbox" name={`album${index}`} /> {album}
-              </label>
-            ))}
-          </div>
-        )}
-
-        <h3 onClick={() => setPriceCollapsed(!priceCollapsed)}>
-          Price
-          <i className={`fas ${priceCollapsed ? 'fa-chevron-right' : 'fa-chevron-down'}`} style={{ marginLeft: '10px' }}></i>
-        </h3>
-        {!priceCollapsed && (
-          <div className="filter-section">
-            <label>
-              <input type="checkbox" name="price1" /> 0-20
-            </label>
-            <label>
-              <input type="checkbox" name="price2" /> 20-40
-            </label>
-            <label>
-              <input type="checkbox" name="price3" /> 40-60
-            </label>
-            <label>
-              <input type="checkbox" name="price4" /> 60-80
-            </label>
-            <label>
-              <input type="checkbox" name="price5" /> 80-100
-            </label>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
       <div className="products">
-        <div className="sort">
-          <label>
-            Sort by:
-            <select>
-              <option value="recommend">Recommend</option>
-              <option value="popularity">Most Popular</option>
-              <option value="newest">Newest</option>
-              <option value="priceLowToHigh">Price: Low to High</option>
-              <option value="priceHighToLow">Price: High to Low</option>
-            </select>
-          </label>
+        <div className="sort-bar">
+          <select value={filters.sort_by} onChange={handleSortChange}>
+            <option value="">Sort By</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="latest">Latest</option>
+            <option value="recommended">Recommended</option>
+          </select>
         </div>
+        {error && <div className="error">{error}</div>}
         <div className="product-list">
-          {error ? (
-            <div className="error">{error}</div>
-          ) : (
-            cards.map(card => (
-              <Link to={`/card/${card.id}`} key={card.id} className="product-item">
-                <img src={card.image_url} alt={card.card_name} className="card-image" />
-                <div className="card-details">
-                  <h2 className="card-name">{card.card_name}</h2>
-                  <p className="card-price">${card.price}</p>
-                  <p className="card-description">{card.description}</p>
-                </div>
-              </Link>
-            ))
-          )}
+          {cards.map(card => (
+            <div
+              className="product-item"
+              key={card.id}
+              onClick={() => handleCardClick(card.id)}
+              style={{ cursor: 'pointer' }}
+            >
+              <img src={card.image_url} alt={card.card_name} />
+              <div className="card-details">
+                <h3 className="card-name">{card.card_name}</h3>
+                <p className="card-price">${card.price}</p>
+                <p className="card-description">{card.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="pagination">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i}
+              onClick={() => handlePageChange(i + 1)}
+              disabled={i + 1 === currentPage}
+            >
+              {i + 1}
+            </button>
+          ))}
         </div>
       </div>
     </div>
   );
-}
+};
 
-export default Card;
+export default CardList;

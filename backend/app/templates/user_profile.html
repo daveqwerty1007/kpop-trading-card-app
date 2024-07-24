@@ -4,11 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Welcome, {{ user.name }}!</h1>
-    <p>Email: {{ user.email }}</p>
-    <p>Name: {{ user.name }}</p>
-    <a href="{{ url_for('users.logout') }}">Logout</a>
+    <header>
+        <h1>User Profile</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('users.profile') }}">Profile</a></li>
+                <li><a href="{{ url_for('users.logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Welcome, {{ user.name }}</h2>
+        <section>
+            <h3>Your Details</h3>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            <!-- Add more user details here as needed -->
+        </section>
+        <section>
+            <h3>Update Profile</h3>
+            <form method="POST" action="{{ url_for('users.update', user_id=user.id) }}">
+                <input type="text" name="name" placeholder="Name" value="{{ user.name }}" required>
+                <input type="email" name="email" placeholder="Email" value="{{ user.email }}" required>
+                <input type="password" name="password" placeholder="New Password">
+                <button type="submit">Update Profile</button>
+            </form>
+        </section>
+    </main>
 </body>
 </html>

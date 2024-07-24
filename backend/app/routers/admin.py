@@ -7,7 +7,6 @@ from ..models import User, Admin
 from ..schemas import UserSchema, AdminSchema
 from ..utils import admin_required
 
-
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
 @bp.route('/login', methods=['GET', 'POST'])
@@ -18,11 +17,9 @@ def login():
         admin = Admin.query.filter_by(email=email).first()
         if admin and check_password_hash(admin.password, password):
             login_user(admin)
-            print("Login successful for admin:", email)  # Debugging statement
             return redirect(url_for('admin.dashboard'))
-        print("Invalid credentials for admin:", email)  # Debugging statement
-        return redirect(url_for('admin.login'))
-    return render_template('login.html')
+        flash('Invalid credentials', 'danger')
+    return render_template('admin_login.html')
 
 @bp.route('/logout')
 @login_required
@@ -37,10 +34,12 @@ def logout():
 @login_required
 @admin_required
 def dashboard():
-    users = User.query.all()
+    users = User.query.all()  # Fetch all users from the database
     return render_template('admin_dashboard.html', admin=current_user, users=users)
 
 @bp.route('/create_user', methods=['POST'])
+@login_required
+@admin_required
 def create_user_route():
     try:
         name = request.form['name']

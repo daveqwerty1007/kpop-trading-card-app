@@ -31,7 +31,7 @@ class OrderSchema(BaseModel):
     total_amount: float
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class PaymentSchema(BaseModel):
     id: int
@@ -41,7 +41,7 @@ class PaymentSchema(BaseModel):
     payment_status: str
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class InventorySchema(BaseModel):
     id: int
@@ -49,14 +49,7 @@ class InventorySchema(BaseModel):
     quantity_available: int
 
     class Config:
-        from_attributes = True
-
-    @classmethod
-    def from_orm(cls, obj):
-        return cls.model_validate(obj)
-
-    def dict(self):
-        return self.model_dump()
+        orm_mode = True
 
 class AdminSchema(BaseModel):
     id: int
@@ -76,12 +69,11 @@ class CartItemBase(BaseModel):
 class CartItemCreate(CartItemBase):
     pass
 
-class CartItem(CartItemBase):
+class CartItemSchema(CartItemBase):
     id: int
 
     class Config:
         orm_mode = True
-        from_attributes = True
 
 class OrderItemBase(BaseModel):
     order_id: int

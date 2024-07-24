@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+from sqlalchemy import or_
 from .models import db, User, Card, Order, Payment, Inventory, Admin, CartItem, OrderItem
 from . import database
 from werkzeug.security import generate_password_hash
@@ -52,8 +54,68 @@ def delete_card(card_id):
         db.session.commit()
     return card
 
-def get_all_cards():
-    return db.session.query(Card).all()
+def get_all_cards(artist=None, group=None, album=None, min_price=None, max_price=None, sort_by=None):
+    query = Card.query
+
+    if artist:
+        artist_filters = artist.split(',')
+        query = query.filter(or_(*[Card.artist.ilike(f"%{a}%") for a in artist_filters]))
+    if group:
+        group_filters = group.split(',')
+        query = query.filter(or_(*[Card.group.ilike(f"%{g}%") for g in group_filters]))
+    if album:
+        album_filters = album.split(',')
+        query = query.filter(or_(*[Card.album.ilike(f"%{a}%") for a in album_filters]))
+    if min_price is not None:
+        query = query.filter(Card.price >= min_price)
+    if max_price is not None:
+        query = query.filter(Card.price <= max_price)
+
+    if sort_by == 'price_asc':
+        query = query.order_by(Card.price.asc())
+    elif sort_by == 'price_desc':
+        query = query.order_by(Card.price.desc())
+    elif sort_by == 'latest':
+        query = query.order_by(Card.id.desc())
+    elif sort_by == 'recommended':
+        query = (query
+                 .join(OrderItem, OrderItem.card_id == Card.id)
+                 .join(Order, Order.id == OrderItem.order_id)
+                 .filter(Order.order_date >= (datetime.now(timezone.utc) - timedelta(days=90)))
+                 .group_by(Card.id)
+                 .order_by(db.func.sum(OrderItem.quantity).desc(), db.func.max(Order.order_date).desc()))
+
+    return query.all()
+
+def get_filter_options():
+    try:
+        artists = db.session.query(Card.artist).distinct().all()
+        albums = db.session.query(Card.album).distinct().all()
+        groups = db.session.query(Card.group).distinct().all()
+
+        # Extract values from the tuples
+        artists = [artist[0] for artist in artists]
+        albums = [album[0] for album in albums]
+        groups = [group[0] for group in groups]
+
+        return {
+            'artists': artists,
+            'albums': albums,
+            'groups': groups
+        }
+    except Exception as e:
+        raise RuntimeError(f"Error fetching filter options: {str(e)}")
+
+def search_cards(query_string):
+    query_string = f"%{query_string}%"
+    search_conditions = [
+        Card.card_name.ilike(query_string),
+        Card.artist.ilike(query_string),
+        Card.album.ilike(query_string),
+        Card.group.ilike(query_string)
+    ]
+    results = Card.query.filter(or_(*search_conditions)).all()
+    return results
 
 # Order CRUD operations
 def create_order(order_data):

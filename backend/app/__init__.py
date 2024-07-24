@@ -37,44 +37,12 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        # Check if the ID belongs to an admin or a user
-        admin_user = Admin.query.get(int(user_id))
-        if admin_user:
-            return admin_user
-        return User.query.get(int(user_id))
-
-    @app.route('/login', methods=['GET', 'POST'])
-    def login():
-        if request.method == 'POST':
-            email = request.form['email']
-            password = request.form['password']
-            user_type = request.form['user_type']
-
-            user = None
-            if user_type == 'admin':
-                user = Admin.query.filter_by(email=email).first()
-                if user and check_password_hash(user.password, password):
-                    login_user(user)
-                    print("Login successful for admin:", email)  # Debugging statement
-                    return redirect(url_for('admin.dashboard'))
-            else:
-                user = User.query.filter_by(email=email).first()
-                if user and check_password_hash(user.password, password):
-                    login_user(user)
-                    print("Login successful for user:", email)  # Debugging statement
-                    return redirect(url_for('users.profile'))
-
-            print("Invalid credentials for user:", email)  # Debugging statement
-            flash('Invalid credentials', 'danger')
-        return render_template('login.html')
-
-    @app.route('/logout')
-    @login_required
-    def logout():
-        logout_user()
-        flash('You have been logged out.', 'success')
-        return redirect(url_for('login'))
-
+        if user_id.startswith('user-'):
+            return User.query.get(int(user_id.split('-')[1]))
+        elif user_id.startswith('admin-'):
+            return Admin.query.get(int(user_id.split('-')[1]))
+        return None
+    
     # Register blueprints (routers)
     app.register_blueprint(users.bp)
     app.register_blueprint(cards.bp)

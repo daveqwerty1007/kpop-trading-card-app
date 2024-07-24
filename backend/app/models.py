@@ -2,30 +2,33 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from .database import db
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
-
+    
     @property
     def is_admin(self):
         return False
-    
+
     @property
     def is_active(self):
         return True
 
     @property
     def is_authenticated(self):
-        return False
+        return True 
 
     @property
     def is_anonymous(self):
         return False
+    
+    def user_type(self):
+        return 'user'
 
     def get_id(self):
-        return str(self.id)
+        return f"user-{self.id}"
 
 class Card(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -55,6 +58,7 @@ class Inventory(db.Model):
     card_id = db.Column(db.Integer, db.ForeignKey('card.id'), nullable=False)
     quantity_available = db.Column(db.Integer, nullable=False)
 
+    card = db.relationship('Card', backref=db.backref('inventory_items', lazy=True))
 
 class Admin(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -77,18 +81,29 @@ class Admin(db.Model, UserMixin):
     @property
     def is_anonymous(self):
         return False
-
+    
+    def user_type(self):
+        return 'admin'
+    
     def get_id(self):
-        return str(self.id)
+        return f"admin-{self.id}"
 
 class CartItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     card_id = db.Column(db.Integer, db.ForeignKey('card.id'), nullable=False)
     quantity = db.Column(db.Integer, nullable=False, default=1)
+    
+    user = db.relationship('User', backref=db.backref('cart_items', lazy=True))
+    card = db.relationship('Card', backref=db.backref('cart_items', lazy=True))
+
 
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True, index=True)
     order_id = db.Column(db.Integer, db.ForeignKey("order.id"))
     card_id = db.Column(db.Integer, db.ForeignKey("card.id"))
     quantity = db.Column(db.Integer, nullable=False)
+    
+    order = db.relationship('Order', backref=db.backref('order_items', lazy=True))
+    card = db.relationship('Card', backref=db.backref('order_items', lazy=True))
+

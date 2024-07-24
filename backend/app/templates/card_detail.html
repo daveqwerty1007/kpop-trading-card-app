@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ card.name }} - Card Details</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .card-detail {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+        }
+        .card img {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+    <script>
+        function addToCart(cardId) {
+            fetch(`/cart_items/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ card_id: cardId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                } else {
+                    alert('Added to cart successfully!');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</head>
+<body>
+    <div class="container mt-4 card-detail">
+        <div class="card">
+            <img src="{{ card.image_url }}" class="card-img-top" alt="{{ card.name }}">
+            <div class="card-body">
+                <h1 class="card-title">{{ card.name }}</h1>
+                <p class="card-text">{{ card.description }}</p>
+                <p class="card-text"><strong>Price:</strong> ${{ card.price }}</p>
+                <a href="{{ url_for('cards.showcase') }}" class="btn btn-primary">Back to Showcase</a>
+                <button onclick="addToCart({{ card.id }})" class="btn btn-success">Add to Cart</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

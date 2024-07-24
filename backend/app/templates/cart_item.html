@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .cart-container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .cart-item img {
+            width: 100px;
+            height: auto;
+        }
+        .cart-item-details {
+            flex-grow: 1;
+            margin-left: 20px;
+        }
+        .cart-item-actions {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+    <script>
+        function updateCartItem(cartItemId, quantity) {
+            fetch(`/cart_items/${cartItemId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ quantity: quantity })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                } else {
+                    alert('Cart item updated successfully!');
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function removeCartItem(cartItemId) {
+            fetch(`/cart_items/${cartItemId}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (response.status === 204) {
+                    alert('Cart item removed successfully!');
+                    location.reload();
+                } else {
+                    response.json().then(data => alert(data.message));
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</head>
+<body>
+    <div class="container mt-4 cart-container">
+        <h1 class="text-center">Shopping Cart</h1>
+        {% if cart_items %}
+            {% for item in cart_items %}
+                <div class="cart-item">
+                    <img src="{{ item.card.image_url }}" alt="{{ item.card.card_name }}">
+                    <div class="cart-item-details">
+                        <h5>{{ item.card.card_name }}</h5>
+                        <p>{{ item.card.description }}</p>
+                        <p><strong>Price:</strong> ${{ item.card.price }}</p>
+                        <p><strong>Quantity:</strong> <input type="number" value="{{ item.quantity }}" min="1" onchange="updateCartItem({{ item.id }}, this.value)"></p>
+                    </div>
+                    <div class="cart-item-actions">
+                        <button onclick="removeCartItem({{ item.id }})" class="btn btn-danger">Remove</button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-center">Your cart is empty.</p>
+        {% endif %}
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

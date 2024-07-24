@@ -4,48 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Welcome, Admin {{ admin.name }}!</h1>
-    <p>Email: {{ admin.email }}</p>
-    <a href="{{ url_for('admin.logout') }}">Logout</a>
-
-    <h2>Create User</h2>
-    <form method="POST" action="{{ url_for('admin.create_user_route') }}">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required><br><br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br><br>
-        <button type="submit">Create User</button>
-    </form>
-
-    <h2>Update User</h2>
-    <form method="POST" action="{{ url_for('admin.update_user_route') }}">
-        <label for="id">User ID:</label>
-        <input type="text" id="id" name="id" required><br><br>
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name"><br><br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email"><br><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password"><br><br>
-        <button type="submit">Update User</button>
-    </form>
-
-    <h2>Delete User</h2>
-    <form method="POST" action="{{ url_for('admin.delete_user_route') }}">
-        <label for="id">User ID:</label>
-        <input type="text" id="id" name="id" required><br><br>
-        <button type="submit">Delete User</button>
-    </form>
-
-    <h2>User List</h2>
-    <ul>
-    {% for user in users %}
-        <li>ID: {{ user.id }}, Name: {{ user.name }}, Email: {{ user.email }}</li>
-    {% endfor %}
-    </ul>
+    <header>
+        <h1>Admin Dashboard</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('admin.logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Welcome, Admin {{ current_user.name }}</h2>
+        <section>
+            <h3>Create User</h3>
+            <form method="POST" action="{{ url_for('admin.create_user_route') }}">
+                <input type="text" name="name" placeholder="Name" required>
+                <input type="email" name="email" placeholder="Email" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <button type="submit">Create User</button>
+            </form>
+        </section>
+        <section>
+            <h3>Update User</h3>
+            <form method="POST" action="{{ url_for('admin.update_user_route') }}">
+                <input type="hidden" name="id" id="update_user_id">
+                <input type="text" name="name" placeholder="Name" id="update_user_name" required>
+                <input type="email" name="email" placeholder="Email" id="update_user_email" required>
+                <input type="password" name="password" placeholder="Password" id="update_user_password">
+                <button type="submit">Update User</button>
+            </form>
+        </section>
+        <section>
+            <h3>Delete User</h3>
+            <form method="POST" action="{{ url_for('admin.delete_user_route') }}">
+                <input type="hidden" name="id" id="delete_user_id">
+                <button type="submit">Delete User</button>
+            </form>
+        </section>
+        <section>
+            <h3>User List</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            <button onclick="fillUpdateForm('{{ user.id }}', '{{ user.name }}', '{{ user.email }}')">Update</button>
+                            <button onclick="fillDeleteForm('{{ user.id }}')">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+    <script>
+        function fillUpdateForm(id, name, email) {
+            document.getElementById('update_user_id').value = id;
+            document.getElementById('update_user_name').value = name;
+            document.getElementById('update_user_email').value = email;
+        }
+        
+        function fillDeleteForm(id) {
+            document.getElementById('delete_user_id').value = id;
+        }
+    </script>
 </body>
 </html>
