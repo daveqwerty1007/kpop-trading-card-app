@@ -11,6 +11,8 @@ import About from './components/About';
 import Privacy from './components/Privacy';
 import Card from './components/Card';
 import CardDetail from './components/CardDetail';
+import AdminPanel from './components/AdminPanel';
+import UserPanel from './components/UserPanel';
 
 const App = () => {
   return (
@@ -26,7 +28,8 @@ const App = () => {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/card" element={<Card />} />
         <Route path="/card/:id" element={<CardDetail />} />
-        {/* Add other routes here */}
+        <Route path="/admin_panel" element={<AdminPanel />} />
+        <Route path="/user_panel" element={<UserPanel />} />
       </Routes>
       <Footer />
     </Router>
