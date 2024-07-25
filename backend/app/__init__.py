@@ -13,7 +13,7 @@ def create_app():
     app = Flask(__name__)
 
     # Enable CORS
-    CORS(app)
+    CORS(app, supports_credentials=True,resources={r"/*": {"origins": "*"}})
 
     # Database configuration
     DB_CONFIG = {
@@ -42,7 +42,7 @@ def create_app():
         elif user_id.startswith('admin-'):
             return Admin.query.get(int(user_id.split('-')[1]))
         return None
-    
+        
     # Register blueprints (routers)
     app.register_blueprint(users.bp)
     app.register_blueprint(cards.bp)
@@ -56,6 +56,13 @@ def create_app():
     @app.route('/')
     def index():
         return render_template('index.html')
+    
+    @app.route('/check_login_status', methods=['GET'])
+    def check_login_status():
+        if current_user.is_authenticated:
+            return jsonify({"logged_in": True, "user": current_user.name}), 200
+        else:
+            return jsonify({"logged_in": False}), 401
     
     # Error handlers
     @app.errorhandler(404)

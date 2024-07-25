@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import or_
+from sqlalchemy import and_, func, or_
 from .models import db, User, Card, Order, Payment, Inventory, Admin, CartItem, OrderItem
 from . import database
 from werkzeug.security import generate_password_hash
+from sqlalchemy.orm import joinedload
+
 
 # User CRUD operations
 def create_user(user_data):
@@ -28,6 +30,80 @@ def delete_user(user_id):
         db.session.delete(user)
         db.session.commit()
     return user
+
+def get_all_users(name=None, email=None, sort_by=None):
+    query = User.query
+
+    if name:
+        name_filters = name.split(',')
+        query = query.filter(or_(*[User.name.ilike(f"%{n}%") for n in name_filters]))
+    if email:
+        email_filters = email.split(',')
+        query = query.filter(or_(*[User.email.ilike(f"%{e}%") for e in email_filters]))
+
+    if sort_by == 'name_asc':
+        query = query.order_by(User.name.asc())
+    elif sort_by == 'name_desc':
+        query = query.order_by(User.name.desc())
+    elif sort_by == 'email_asc':
+        query = query.order_by(User.email.asc())
+    elif sort_by == 'email_desc':
+        query = query.order_by(User.email.desc())
+
+    return query.all()
+
+def get_user_filter_options():
+    try:
+        names = db.session.query(User.name).distinct().all()
+        emails = db.session.query(User.email).distinct().all()
+
+        # Extract values from the tuples
+        names = [name[0] for name in names]
+        emails = [email[0] for email in emails]
+
+        return {
+            'names': names,
+            'emails': emails,
+        }
+    except Exception as e:
+        raise RuntimeError(f"Error fetching filter options: {str(e)}")
+
+def search_users(query_string):
+    query_string = f"%{query_string}%"
+    search_conditions = [
+        User.name.ilike(query_string),
+        User.email.ilike(query_string),
+    ]
+    results = User.query.filter(or_(*search_conditions)).all()
+    return results
+
+def get_user_orders(user_id):
+    orders = db.session.query(Order).options(
+        joinedload(Order.items).joinedload(OrderItem.card)
+    ).filter(Order.user_id == user_id).all()
+    
+    order_list = []
+    for order in orders:
+        order_dict = {
+            'order_id': order.id,
+            'order_date': order.order_date,
+            'total_amount': order.total_amount,
+            'items': [
+                {
+                    'item_id': item.id,
+                    'card_name': item.card.card_name,
+                    'artist': item.card.artist,
+                    'group': item.card.group,
+                    'album': item.card.album,
+                    'quantity': item.quantity,
+                    'price': item.card.price
+                } for item in order.items
+            ]
+        }
+        order_list.append(order_dict)
+    
+    return order_list
+
 
 # Card CRUD operations
 def create_card(card_data):
@@ -139,6 +215,57 @@ def delete_order(order_id):
     db.session.delete(order)
     db.session.commit()
 
+def get_all_orders(user_id=None, min_date=None, max_date=None, min_total=None, max_total=None, sort_by=None):
+    query = Order.query
+
+    if user_id:
+        query = query.filter(Order.user_id == user_id)
+    if min_date:
+        query = query.filter(Order.order_date >= min_date)
+    if max_date:
+        query = query.filter(Order.order_date <= max_date)
+    if min_total is not None:
+        query = query.filter(Order.total_amount >= min_total)
+    if max_total is not None:
+        query = query.filter(Order.total_amount <= max_total)
+
+    if sort_by == 'total_asc':
+        query = query.order_by(Order.total_amount.asc())
+    elif sort_by == 'total_desc':
+        query = query.order_by(Order.total_amount.desc())
+    elif sort_by == 'latest':
+        query = query.order_by(Order.order_date.desc())
+
+    return query.all()
+
+def get_order_filter_options():
+    try:
+        users = db.session.query(User.id, User.name).join(Order, User.id == Order.user_id).distinct().all()
+        date_range = db.session.query(func.min(Order.order_date), func.max(Order.order_date)).one()
+        
+        # Extract values
+        users = [{'id': user[0], 'name': user[1]} for user in users]
+        min_date, max_date = date_range
+
+        return {
+            'users': users,
+            'min_date': min_date,
+            'max_date': max_date
+        }
+    except Exception as e:
+        raise RuntimeError(f"Error fetching filter options: {str(e)}")
+    
+def search_orders(query_string):
+    query_string = f"%{query_string}%"
+    search_conditions = [
+        User.name.ilike(query_string),
+        # Add other search conditions if there are other searchable fields in Order
+    ]
+    results = Order.query.join(User, User.id == Order.user_id).filter(or_(*search_conditions)).all()
+    return results
+
+
+
 # Payment CRUD operations
 def get_payment_by_id(payment_id):
     return Payment.query.get(payment_id)
@@ -210,6 +337,106 @@ def delete_admin(admin_id):
         db.session.delete(admin)
         db.session.commit()
     return admin
+
+def get_user_count():
+    return User.query.count()
+
+def get_order_count():
+    return Order.query.count()
+
+def get_product_count():
+    return Card.query.count()
+
+def get_total_sales():
+    total_sales = round(db.session.query(func.sum(Order.total_amount)).scalar(),2)
+    return total_sales or 0  # Return 0 if total_sales is None
+
+def get_sales_data_last_week():
+    one_week_ago = datetime.utcnow() - timedelta(days=30)
+    sales_data = db.session.query(
+        func.date(Order.order_date).label('date'),
+        func.sum(Order.total_amount).label('sales')
+    ).filter(Order.order_date >= one_week_ago).group_by(func.date(Order.order_date)).all()
+    
+    return [{"date": str(data.date), "sales": float(data.sales)} for data in sales_data]
+
+def rows_to_dict_list(rows):
+    return [row._asdict() for row in rows]
+
+def detect_fraudulent_orders():
+    seven_days_ago = datetime.now() - timedelta(days=7)
+    results = db.session.query(
+        User.name.label('customer_name'),
+        User.email.label('customer_email'),
+        Order.id.label('order_id'),
+        Order.order_date,
+        Payment.payment_status
+    ).join(Order, User.id == Order.user_id) \
+     .outerjoin(Payment, Order.id == Payment.order_id) \
+     .filter(and_(
+         Order.order_date <= seven_days_ago,
+         (Payment.payment_status == None) | (Payment.payment_status != 'Completed')
+     )).all()
+
+    # Convert results to list of dicts
+    return rows_to_dict_list(results)
+
+def get_top_spending_users():
+    results = db.session.query(
+        User.id,
+        User.name,
+        User.email,
+        func.sum(Order.total_amount).label('total_spent')
+    ).join(Order, User.id == Order.user_id) \
+     .group_by(User.id, User.name, User.email) \
+     .order_by(func.sum(Order.total_amount).desc()) \
+     .limit(5).all()
+    
+    # Convert results to list of dicts
+    return rows_to_dict_list(results)
+
+def get_old_inventory():
+    three_months_ago = datetime.now() - timedelta(days=90)
+    results = db.session.query(
+        Card.card_name,
+        Card.artist,
+        Card.group,
+        Card.album,
+        func.coalesce(func.sum(OrderItem.quantity), 0).label('total_quantity_sold'),
+        func.max(Order.order_date).label('last_sold_date'),
+        Inventory.quantity_available
+    ).outerjoin(OrderItem, OrderItem.card_id == Card.id) \
+     .outerjoin(Order, and_(Order.id == OrderItem.order_id, Order.order_date >= three_months_ago)) \
+     .join(Inventory, Inventory.card_id == Card.id) \
+     .group_by(Card.card_name, Card.artist, Card.group, Card.album, Inventory.quantity_available) \
+     .order_by('total_quantity_sold', 'last_sold_date') \
+     .limit(5).all()
+    
+    # Convert results to list of dicts
+    return rows_to_dict_list(results)
+
+def get_restock_list():
+    three_months_ago = datetime.now() - timedelta(days=90)
+    results = db.session.query(
+        Card.card_name,
+        Card.artist,
+        Card.group,
+        Card.album,
+        func.sum(OrderItem.quantity).label('total_quantity_sold'),
+        func.max(Order.order_date).label('last_sold_date'),
+        Inventory.quantity_available
+    ).join(OrderItem, OrderItem.card_id == Card.id) \
+     .join(Order, Order.id == OrderItem.order_id) \
+     .join(Inventory, Inventory.card_id == Card.id) \
+     .filter(Order.order_date >= three_months_ago) \
+     .group_by(Card.card_name, Card.artist, Card.group, Card.album, Inventory.quantity_available) \
+     .having(Inventory.quantity_available < 2) \
+     .order_by('total_quantity_sold', 'last_sold_date') \
+     .limit(10).all()
+    
+    # Convert results to list of dicts
+    return rows_to_dict_list(results)
+
 
 # Cart CRUD operations
 
