@@ -1,37 +1,172 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState(''); // For registration
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  const handleUserLoginSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:5001/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+      console.log('User Login response:', data);
+
+      if (response.ok) {
+        navigate('/user_panel'); // Adjust this path as necessary
+      } else {
+        setError(data.message || 'Unknown error occurred');
+      }
+    } catch (err) {
+      console.error('User Login error:', err);
+      setError('An error occurred. Please try again.');
+    }
+  };
+
+  const handleAdminLoginSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:5001/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+      console.log('Admin Login response:', data);
+
+      if (response.ok) {
+        navigate('/admin_panel'); // Adjust this path as necessary
+      } else {
+        setError(data.message || 'Unknown error occurred');
+      }
+    } catch (err) {
+      console.error('Admin Login error:', err);
+      setError('An error occurred. Please try again.');
+    }
+  };
+
+  const handleSignupSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    try {
+      const response = await fetch('http://localhost:5001/users/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+      console.log('Registration response:', data);
+
+      if (response.ok) {
+        navigate('/user_panel'); // Adjust this path as necessary
+      } else {
+        setError(data.message || 'Unknown error occurred');
+      }
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError('An error occurred. Please try again.');
+    }
+  };
 
   const renderForm = () => {
     switch (activeTab) {
       case 'login':
         return (
-          <form className="login-form">
+          <form className="login-form" onSubmit={handleUserLoginSubmit}>
             <h2>User Login</h2>
-            <input type="email" placeholder="Email" required />
-            <input type="password" placeholder="Password" required />
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
             <button type="submit">Login</button>
+            {error && <p className="error">{error}</p>}
           </form>
         );
       case 'signup':
         return (
-          <form className="login-form">
+          <form className="login-form" onSubmit={handleSignupSubmit}>
             <h2>Sign Up</h2>
-            <input type="text" placeholder="Name" required />
-            <input type="email" placeholder="Email" required />
-            <input type="password" placeholder="Password" required />
+            <input
+              type="text"
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
             <button type="submit">Sign Up</button>
+            {error && <p className="error">{error}</p>}
           </form>
         );
       case 'admin':
         return (
-          <form className="login-form">
+          <form className="login-form" onSubmit={handleAdminLoginSubmit}>
             <h2>Admin Login</h2>
-            <input type="email" placeholder="Admin Email" required />
-            <input type="password" placeholder="Admin Password" required />
+            <input
+              type="email"
+              placeholder="Admin Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Admin Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
             <button type="submit">Login</button>
+            {error && <p className="error">{error}</p>}
           </form>
         );
       default:
