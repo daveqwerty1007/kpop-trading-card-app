@@ -45,7 +45,17 @@ class Order(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     order_date = db.Column(db.DateTime, nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
-    items = db.relationship('OrderItem', back_populates='order')
+    items = db.relationship('OrderItem', back_populates='order') 
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "order_date": self.order_date,
+            "total_amount": self.total_amount,
+            "items": [item.to_dict() for item in self.items]  
+        }
+
 
 class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -99,12 +109,14 @@ class CartItem(db.Model):
     card = db.relationship('Card', backref=db.backref('cart_items', lazy=True))
 
     def to_dict(self):
-            return {
-                "id": self.id,
-                "user_id": self.user_id,
-                "card_id": self.card_id,
-                "quantity": self.quantity
-            }
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "card_id": self.card_id,
+            "quantity": self.quantity,
+            "card_name": self.card.card_name,
+            "price": self.card.price  
+        }
     
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True, index=True)
@@ -115,3 +127,11 @@ class OrderItem(db.Model):
     order = db.relationship('Order', backref=db.backref('order_items', lazy=True))
     card = db.relationship('Card', backref=db.backref('order_items', lazy=True))
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "card_id": self.card_id,
+            "quantity": self.quantity,
+            "card_name": self.card.card_name,  # Assuming card_name exists in Card model
+            "price": self.card.price  # Assuming price exists in Card model
+        }

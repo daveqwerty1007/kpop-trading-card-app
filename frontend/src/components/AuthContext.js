@@ -7,14 +7,28 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
  
   useEffect(() => {
-    fetch('/api/status')
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'authenticated') {
-          setIsLoggedIn(true);
-          setUser(data.user);
-        }
-      });
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      fetch('/api/status', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'authenticated') {
+            setIsLoggedIn(true);
+            setUser(data.user);
+          } else {
+            setIsLoggedIn(false);
+            setUser(null);
+          }
+        })
+        .catch(() => {
+          setIsLoggedIn(false);
+          setUser(null);
+        });
+    }
   }, []);
 
   const login = (username, password) => {
@@ -28,16 +42,20 @@ export const AuthProvider = ({ children }) => {
       .then(response => response.json())
       .then(data => {
         if (data.status === 'success') {
+          localStorage.setItem('authToken', data.token);
           setIsLoggedIn(true);
-          setUser(username);
+          setUser(data.user);
+        } else {
+          throw new Error('Login failed');
         }
         return data;
       });
   };
 
   const logout = () => {
+    localStorage.removeItem('authToken');
     return fetch('/api/logout', {
-      method: 'POST'
+      method: 'POST',
     })
       .then(response => response.json())
       .then(data => {

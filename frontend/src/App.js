@@ -13,6 +13,9 @@ import Card from './components/Card';
 import CardDetail from './components/CardDetail';
 import AdminPanel from './components/AdminPanel';
 import UserPanel from './components/UserPanel';
+import SearchResults from './components/SearchResult';
+import Checkout from './components/Checkout';
+import OrderConfirmation from './components/OrderConfirmation';
 
 const App = () => {
   return (
@@ -30,6 +33,9 @@ const App = () => {
         <Route path="/card/:id" element={<CardDetail />} />
         <Route path="/admin_panel" element={<AdminPanel />} />
         <Route path="/user_panel" element={<UserPanel />} />
+        <Route path='/search' element={<SearchResults/>}/>
+        <Route path='/checkout' element={<Checkout/>}/>
+        <Route path="/order-confirmation/:order_id" element={<OrderConfirmation />} />
       </Routes>
       <Footer />
     </Router>

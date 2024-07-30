@@ -16,10 +16,15 @@ function CardDetail() {
   }, [id]);
 
   const fetchCardData = () => {
-    fetch(`http://localhost:5001/cards/${id}`)
+    const token = localStorage.getItem('authToken');
+    fetch(`http://localhost:5001/cards/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
       .then(response => {
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error('Failed to fetch card data');
         }
         return response.json();
       })
@@ -34,7 +39,12 @@ function CardDetail() {
   };
 
   const fetchRelatedCards = (artistFirstName) => {
-    fetch(`http://localhost:5001/cards/search?q=${artistFirstName}`)
+    const token = localStorage.getItem('authToken');
+    fetch(`http://localhost:5001/cards/search?q=${artistFirstName}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
       .then(response => response.json())
       .then(data => {
         setRelatedCards(data.filter(relatedCard => relatedCard.id !== parseInt(id)));
@@ -44,19 +54,25 @@ function CardDetail() {
       });
   };
 
-  // Function to handle adding an item to the cart
-  const handleAddToCart = (cardId, quantity) => {
-    fetch('localhost:5001/cart_items/', {
+  const handleAddToCart = () => {
+    const token = localStorage.getItem('authToken');
+    fetch('http://localhost:5001/cart_items/', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({
-        card_id: cardId,
+        card_id: card.id,
         quantity: quantity
       })
     })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to add item to cart');
+      }
+      return response.json();
+    })
     .then(data => {
       console.log(`Added ${quantity} of ${data.card_name} to the cart.`);
     })
