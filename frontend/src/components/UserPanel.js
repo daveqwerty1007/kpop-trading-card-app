@@ -17,26 +17,10 @@ const UserPanel = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      const response = await fetch('http://localhost:5001/users/logout', {
-        method: 'POST', // Assuming POST request for logout
-        credentials: 'include', // Include cookies if your authentication relies on them
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        window.location.href = '/'; // Redirect to homepage
-      } else {
-        // Handle logout error (optional)
-        console.error('Logout failed');
-      }
-    } catch (error) {
-      console.error('An error occurred during logout', error);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('authToken'); // Remove token from local storage
+    window.location.href = '/'; // Redirect to homepage or login page
   };
-
 
   return (
     <div className="user-panel">
@@ -66,8 +50,21 @@ const Account = () => {
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
-    fetch('/users/current')
-      .then(response => response.json())
+    const token = localStorage.getItem('authToken');
+    fetch('http://localhost:5001/users/current', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Failed to fetch account details');
+        }
+      })
       .then(data => setAccountDetails(data))
       .catch(error => console.error('Error fetching account details:', error));
   }, []);
@@ -80,10 +77,12 @@ const Account = () => {
   };
 
   const handleSave = () => {
-    fetch('/users/current', {
+    const token = localStorage.getItem('authToken');
+    fetch('http://localhost:5001/users/current', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify(accountDetails),
     })
@@ -126,7 +125,12 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    fetch('/users/orders')
+    const token = localStorage.getItem('authToken');
+    fetch('http://localhost:5001/users/orders', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
       .then(response => response.json())
       .then(data => setOrders(data))
       .catch(error => console.error('Error fetching orders:', error));
@@ -165,7 +169,12 @@ const Settings = () => {
   });
 
   useEffect(() => {
-    fetch('/users/settings')
+    const token = localStorage.getItem('authToken');
+    fetch('http://localhost:5001/users/settings', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
       .then(response => response.json())
       .then(data => setSettings(data))
       .catch(error => console.error('Error fetching settings:', error));
@@ -179,10 +188,12 @@ const Settings = () => {
   };
 
   const handleSave = () => {
-    fetch('/users/settings', {
+    const token = localStorage.getItem('authToken');
+    fetch('http://localhost:5001/users/settings', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify(settings),
     })

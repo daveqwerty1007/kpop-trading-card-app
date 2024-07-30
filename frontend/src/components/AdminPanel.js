@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './AdminPanel.css';
 import Dashboard from './Dashboard';
 import Orders from './Orders';
@@ -7,25 +7,25 @@ import Users from './Users';
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [adminName, setAdminName] = useState('Admin');
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      fetch('http://localhost:5001/admin/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+        .then(response => response.json())
+        .then(data => setAdminName(data.name || 'Admin'))
+        .catch(error => console.error('Error fetching admin profile:', error));
+    }
+  }, []);
 
   const handleLogout = async () => {
-    try {
-      const response = await fetch('http://localhost:5001/admin/logout', {
-        method: 'POST', // Assuming POST request for logout
-        credentials: 'include', // Include cookies if your authentication relies on them
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        window.location.href = '/'; // Redirect to homepage
-      } else {
-        // Handle logout error (optional)
-        console.error('Logout failed');
-      }
-    } catch (error) {
-      console.error('An error occurred during logout', error);
-    }
+    localStorage.removeItem('authToken'); // Remove token from local storage
+    window.location.href = '/'; // Redirect to homepage
   };
 
   const renderContent = () => {
@@ -48,7 +48,7 @@ const AdminPanel = () => {
       <div className="sidebar">
         <div className="profile">
           <h2>Admin Panel</h2>
-          <p>Welcome, Admin!</p>
+          <p>Welcome, {adminName}!</p>
         </div>
         <nav>
           <ul>

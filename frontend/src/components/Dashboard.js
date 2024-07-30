@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import './Dashboard.css';
@@ -18,7 +18,12 @@ const Dashboard = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      const response = await fetch('http://localhost:5001/admin/dashboard');
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('http://localhost:5001/admin/dashboard', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard stats');
       }
@@ -72,48 +77,56 @@ const Dashboard = () => {
         <h2>Sales for the Past Week</h2>
         <Line data={chartData} />
       </div>
-      <div className="additional-data">
-        <div className="section">
-          <h2>Fraudulent Orders</h2>
-          <ul>
-            {stats.fraudulent_orders && stats.fraudulent_orders.map(order => (
-              <li key={order.order_id}>
-                <strong>{order.customer_name}</strong> ({order.customer_email}): Order #{order.order_id} - {order.payment_status}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="section">
-          <h2>Top Spending Users</h2>
-          <ul>
-            {stats.top_spending_users && stats.top_spending_users.map(user => (
-              <li key={user.id}>
-                <strong>{user.name}</strong> ({user.email}): ${user.total_spent.toFixed(2)}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="section">
-          <h2>Old Inventory</h2>
-          <ul>
-            {stats.old_inventory && stats.old_inventory.map(item => (
-              <li key={item.card_name}>
-                <strong>{item.card_name}</strong> by {item.artist} - {item.album} ({item.quantity_available} available)
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="section">
-          <h2>Restock List</h2>
-          <ul>
-            {stats.restock_list && stats.restock_list.map(item => (
-              <li key={item.card_name}>
-                <strong>{item.card_name}</strong> by {item.artist} - {item.album} (Only {item.quantity_available} left)
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      <CollapsibleList title="Fraudulent Orders" items={stats.fraudulent_orders} />
+      <CollapsibleList title="Top Spending Users" items={stats.top_spending_users} />
+      <CollapsibleList title="Old Inventory" items={stats.old_inventory} />
+      <CollapsibleList title="Restock List" items={stats.restock_list} />
+    </div>
+  );
+};
+
+const CollapsibleList = ({ title, items = [] }) => {
+  const [collapsed, setCollapsed] = useState(true);
+
+  const toggleCollapse = () => setCollapsed(!collapsed);
+
+  const visibleItems = collapsed ? items.slice(0, 3) : items;
+
+  return (
+    <div className="section">
+      <h2>{title}</h2>
+      <ul>
+        {visibleItems.map((item, index) => (
+          <li key={index}>
+            {item.order_id && (
+              <>
+                <strong>Order ID:</strong> {item.order_id}<br />
+                <strong>Customer:</strong> {item.customer_name} ({item.customer_email})<br />
+                <strong>Status:</strong> {item.payment_status}
+              </>
+            )}
+            {item.id && item.total_spent && (
+              <>
+                <strong>User:</strong> {item.name} ({item.email})<br />
+                <strong>Total Spent:</strong> ${item.total_spent.toFixed(2)}
+              </>
+            )}
+            {item.card_name && (
+              <>
+                <strong>Card:</strong> {item.card_name}<br />
+                <strong>Artist:</strong> {item.artist}<br />
+                <strong>Album:</strong> {item.album}<br />
+                <strong>Quantity Available:</strong> {item.quantity_available}
+              </>
+            )}
+          </li>
+        ))}
+      </ul>
+      {items.length > 5 && (
+        <button onClick={toggleCollapse}>
+          {collapsed ? 'Show More' : 'Show Less'}
+        </button>
+      )}
     </div>
   );
 };

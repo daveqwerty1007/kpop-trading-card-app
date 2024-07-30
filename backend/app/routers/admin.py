@@ -1,11 +1,10 @@
 from flask import Blueprint, request, jsonify
-from flask_login import login_user, logout_user, login_required, current_user
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import check_password_hash, generate_password_hash
 from pydantic import ValidationError
-from ..crud import create_user, detect_fraudulent_orders, get_old_inventory, get_order_count, get_product_count, get_restock_list, get_sales_data_last_week, get_top_spending_users, get_total_sales, get_user_by_id, get_user_count, update_user, delete_user
-from ..models import User, Admin
+from ..crud import create_user, detect_fraudulent_orders, get_old_inventory, get_order_count, get_product_count, get_restock_list, get_sales_data_last_week, get_top_spending_users, get_total_sales, get_user_count, update_user, delete_user
+from ..models import Admin
 from ..schemas import UserSchema, AdminSchema
-from ..utils import admin_required, user_or_admin_required
 import logging
 
 logging.basicConfig(level=logging.DEBUG)  # Set the level to DEBUG or INFO as needed
@@ -21,9 +20,9 @@ def admin_login():
         
         admin = Admin.query.filter_by(email=email).first()
         if admin and check_password_hash(admin.password, password):
-            login_user(admin)
+            access_token = create_access_token(identity=admin.id)
             logging.info(f"Admin {admin.email} logged in.")
-            return jsonify({"message": "Admin login successful", "admin_id": admin.id}), 200
+            return jsonify({"message": "Admin login successful", "access_token": access_token, "admin_id": admin.id}), 200
         else:
             logging.warning(f"Failed login attempt for {email}")
             return jsonify({"message": "Invalid credentials"}), 401
@@ -32,17 +31,12 @@ def admin_login():
         return jsonify({"message": "An error occurred"}), 500
 
 @bp.route('/logout', methods=['POST'])
-# @admin_required
 def logout():
-    if current_user.is_authenticated and current_user.is_admin:
-        admin_email = current_user.email
-        logout_user()
-        print("Admin logged out:", admin_email)  # Debugging statement
-        return jsonify({"message": "Logout successful"}), 200
-    return jsonify({"message": "Unauthorized"}), 401
+    # Invalidate the token on the client side or implement token blacklisting
+    return jsonify({"message": "Logout successful"}), 200
 
 @bp.route('/create_user', methods=['POST'])
-# @admin_required
+@jwt_required()
 def create_user_route():
     try:
         data = request.json
@@ -54,7 +48,7 @@ def create_user_route():
         return jsonify({"errors": e.errors()}), 400
 
 @bp.route('/update_user', methods=['PUT'])
-#@admin_required
+@jwt_required()
 def update_user_route():
     try:
         user_id = request.json.get('id')
@@ -70,7 +64,7 @@ def update_user_route():
         return jsonify({"errors": e.errors()}), 400
 
 @bp.route('/delete_user', methods=['DELETE'])
-#@admin_required
+@jwt_required()
 def delete_user_route():
     user_id = request.json.get('id')
     user = delete_user(user_id)
@@ -79,6 +73,7 @@ def delete_user_route():
     return jsonify({"message": "User not found"}), 404
 
 @bp.route('/dashboard', methods=['GET'])
+@jwt_required()
 def dashboard():
     try:
         response = {

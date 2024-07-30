@@ -1,19 +1,23 @@
 import os
-from flask import Flask, jsonify, request, redirect, url_for, render_template, flash
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS 
 from .database import init_db, db
 from .routers import users, cards, orders, payments, inventory, admin, order_items, cart_items
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_login import LoginManager, current_user
 from .models import User, Admin
-from .schemas import UserSchema, AdminSchema
-from werkzeug.security import check_password_hash
+from flask_jwt_extended import JWTManager, create_access_token
+
 
 def create_app():
     app = Flask(__name__)
 
     # Enable CORS
-    CORS(app, supports_credentials=True,resources={r"/*": {"origins": "*"}})
+    CORS(app, 
+         supports_credentials=True,
+         resources={r"/*": {"origins": "*"}},
+         origins=["http://localhost:3000"])
+    
+    jwt = JWTManager(app)
 
     # Database configuration
     DB_CONFIG = {

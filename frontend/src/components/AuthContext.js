@@ -5,9 +5,8 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
-
+ 
   useEffect(() => {
-    // Check login status on initial load
     fetch('/api/status')
       .then(response => response.json())
       .then(data => {

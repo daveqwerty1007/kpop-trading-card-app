@@ -1,17 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './Cart.css';
 
 const Cart = () => {
-  // Example cart items
-  const cartItems = [
-    { id: 1, name: 'Item 1', quantity: 2, price: 10 },
-    { id: 2, name: 'Item 2', quantity: 1, price: 20 },
-    { id: 3, name: 'Item 3', quantity: 3, price: 15 },
-  ];
+  const [cartItems, setCartItems] = useState([]);
+  const [totalAmount, setTotalAmount] = useState(0);
 
-  const getTotalPrice = () => {
-    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-  };
+  useEffect(() => {
+    fetch('http://localhost:5001/orders/cart')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data) {
+          setTotalAmount(data.total_amount || 0);
+          // Fetch details for each cart item
+          const fetchItemDetails = data.cart_items.map(item =>
+            fetch(`http://localhost:5001/cards/${item.card_id}`)
+              .then(response => response.json())
+              .then(cardData => ({
+                ...item,
+                name: cardData.card_name,
+                price: cardData.price,
+              }))
+          );
+          return Promise.all(fetchItemDetails);
+        }
+      })
+      .then(detailedItems => {
+        setCartItems(detailedItems || []);
+      })
+      .catch(error => console.error('Error fetching cart data:', error));
+  }, []);
 
   return (
     <div className="cart">
@@ -28,7 +50,7 @@ const Cart = () => {
         ))}
       </ul>
       <div className="cart-total">
-        <h3>Total Price: ${getTotalPrice()}</h3>
+        <h3>Total Price: ${totalAmount}</h3>
       </div>
     </div>
   );

@@ -44,9 +44,23 @@ function CardDetail() {
       });
   };
 
-  const handleAddToCart = () => {
-    // Logic to add the item to the cart
-    console.log(`Added ${quantity} of ${card.card_name} to the cart.`);
+  // Function to handle adding an item to the cart
+  const handleAddToCart = (cardId, quantity) => {
+    fetch('localhost:5001/cart_items/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        card_id: cardId,
+        quantity: quantity
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log(`Added ${quantity} of ${data.card_name} to the cart.`);
+    })
+    .catch(error => console.error('Error adding item to cart:', error));
   };
 
   const handleQuantityChange = (change) => {

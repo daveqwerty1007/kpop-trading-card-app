@@ -14,7 +14,12 @@ const Products = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('http://localhost:5001/cards/list');
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('http://localhost:5001/cards/list', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch products');
       }
@@ -36,18 +41,21 @@ const Products = () => {
     e.preventDefault();
     const method = isEditing ? 'PUT' : 'POST';
     const url = isEditing ? `http://localhost:5001/cards/${form.id}` : 'http://localhost:5001/cards/';
-    
+    const token = localStorage.getItem('authToken');
+
     try {
       const response = await fetch(url, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, price: parseFloat(form.price) }), // Ensure price is a number
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save product');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save product');
       }
 
       setForm({ id: null, card_name: '', artist: '', group: '', album: '', price: '', description: '', image_url: '' });
@@ -64,11 +72,13 @@ const Products = () => {
   };
 
   const deleteProduct = async (productId) => {
+    const token = localStorage.getItem('authToken');
     try {
       const response = await fetch(`http://localhost:5001/cards/${productId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
       if (!response.ok) {

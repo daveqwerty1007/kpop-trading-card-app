@@ -1,35 +1,38 @@
 from flask import Blueprint, request, jsonify
-from flask_login import login_required, current_user
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from pydantic import ValidationError
 from datetime import datetime
 
-from ..utils import admin_required, user_or_admin_required
+from ..utils import admin_required
 from ..crud import (
     create_order, get_all_orders, get_order_by_id, get_order_filter_options, get_user_orders, search_orders, update_order, delete_order,
     update_cart_item, delete_cart_item, get_cart_items, clear_cart, create_payment
 )
-from ..schemas import OrderSchema, PaymentSchema
+from ..schemas import OrderSchema
+from ..models import Card
 
 bp = Blueprint('orders', __name__, url_prefix='/orders')
 
 @bp.route('/cart', methods=['GET'])
-#@login_required
+@jwt_required()
 def cart():
-    cart_items = get_cart_items(current_user.id)
+    user_id = get_jwt_identity()
+    cart_items = get_cart_items(user_id)
     total_amount = sum(item.card.price * item.quantity for item in cart_items)
     return jsonify({"cart_items": [item.to_dict() for item in cart_items], "total_amount": total_amount}), 200
 
 @bp.route('/checkout', methods=['POST'])
-#@login_required
+@jwt_required()
 def checkout():
     try:
-        cart_items = get_cart_items(current_user.id)
+        user_id = get_jwt_identity()
+        cart_items = get_cart_items(user_id)
         if not cart_items:
             return jsonify({'message': 'Cart is empty'}), 400
         
         total_amount = sum(item.card.price * item.quantity for item in cart_items)
         order_data = {
-            'user_id': current_user.id,
+            'user_id': user_id,
             'order_date': datetime.utcnow(),
             'total_amount': total_amount
         }
@@ -41,7 +44,7 @@ def checkout():
             'payment_status': 'Completed'
         }
         create_payment(payment_data)
-        clear_cart(current_user.id)
+        clear_cart(user_id)
         return jsonify({'message': 'Checkout successful', 'order_id': order.id}), 200
 
     except ValidationError as e:
@@ -50,11 +53,12 @@ def checkout():
         return jsonify({'message': str(e)}), 500
 
 @bp.route('/update_cart_item/<int:card_id>', methods=['PUT'])
-#@login_required
+@jwt_required()
 def update_cart_item_route(card_id):
     try:
+        user_id = get_jwt_identity()
         quantity = request.json['quantity']
-        update_cart_item(current_user.id, card_id, quantity)
+        update_cart_item(user_id, card_id, quantity)
         return jsonify({'message': 'Cart item updated'}), 200
     except ValidationError as e:
         return jsonify(e.errors()), 400
@@ -62,10 +66,11 @@ def update_cart_item_route(card_id):
         return jsonify({'message': str(e)}), 500
 
 @bp.route('/delete_cart_item/<int:card_id>', methods=['DELETE'])
-#@login_required
+@jwt_required()
 def delete_cart_item_route(card_id):
     try:
-        delete_cart_item(current_user.id, card_id)
+        user_id = get_jwt_identity()
+        delete_cart_item(user_id, card_id)
         return jsonify({'message': 'Cart item deleted'}), 200
     except ValidationError as e:
         return jsonify(e.errors()), 400
@@ -73,7 +78,7 @@ def delete_cart_item_route(card_id):
         return jsonify({'message': str(e)}), 500
 
 @bp.route('/<int:order_id>', methods=['GET'])
-#@user_or_admin_required
+@jwt_required()
 def detail(order_id):
     try:
         order = get_order_by_id(order_id)
@@ -86,8 +91,8 @@ def detail(order_id):
         return jsonify({'message': str(e)}), 500
 
 @bp.route('/<int:order_id>', methods=['PUT'])
-#@login_required
-#@admin_required
+@jwt_required()
+@admin_required  # If admin access is required, implement this decorator
 def update(order_id):
     try:
         order_data = request.json
@@ -99,8 +104,8 @@ def update(order_id):
         return jsonify({'message': str(e)}), 500
 
 @bp.route('/<int:order_id>', methods=['DELETE'])
-#@login_required
-#@admin_required
+@jwt_required()
+@admin_required  # If admin access is required, implement this decorator
 def delete(order_id):
     try:
         delete_order(order_id)
@@ -124,7 +129,7 @@ def list_orders():
         return jsonify([OrderSchema.from_orm(order).dict() for order in orders])
     except ValidationError as e:
         return jsonify(e.errors()), 400
-    
+
 @bp.route('/filter-options', methods=['GET'])
 def order_filter_options():
     try:
@@ -133,7 +138,6 @@ def order_filter_options():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    
 @bp.route('/search', methods=['GET'])
 def search_orders_route():
     query = request.args.get('q')

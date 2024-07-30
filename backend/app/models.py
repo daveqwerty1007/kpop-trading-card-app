@@ -97,7 +97,14 @@ class CartItem(db.Model):
     user = db.relationship('User', backref=db.backref('cart_items', lazy=True))
     card = db.relationship('Card', backref=db.backref('cart_items', lazy=True))
 
-
+    def to_dict(self):
+            return {
+                "id": self.id,
+                "user_id": self.user_id,
+                "card_id": self.card_id,
+                "quantity": self.quantity
+            }
+    
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True, index=True)
     order_id = db.Column(db.Integer, db.ForeignKey("order.id"))

@@ -10,6 +10,10 @@ const Login = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  const storeToken = (token) => {
+    localStorage.setItem('authToken', token);
+  };
+
   const handleUserLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -28,7 +32,8 @@ const Login = () => {
       console.log('User Login response:', data);
 
       if (response.ok) {
-        navigate('/user_panel'); // Adjust this path as necessary
+        storeToken(data.access_token);
+        navigate('/user_panel'); 
       } else {
         setError(data.message || 'Unknown error occurred');
       }
@@ -56,6 +61,7 @@ const Login = () => {
       console.log('Admin Login response:', data);
 
       if (response.ok) {
+        storeToken(data.access_token);
         navigate('/admin_panel'); // Adjust this path as necessary
       } else {
         setError(data.message || 'Unknown error occurred');
@@ -92,6 +98,11 @@ const Login = () => {
       console.error('Registration error:', err);
       setError('An error occurred. Please try again.');
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    navigate('/login'); // Adjust the path as necessary
   };
 
   const renderForm = () => {
