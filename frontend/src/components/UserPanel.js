@@ -18,8 +18,8 @@ const UserPanel = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken'); // Remove token from local storage
-    window.location.href = '/'; // Redirect to homepage or login page
+    localStorage.removeItem('authToken');
+    window.location.href = '/';
   };
 
   return (
@@ -58,13 +58,7 @@ const Account = () => {
         'Authorization': `Bearer ${token}`,
       },
     })
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error('Failed to fetch account details');
-        }
-      })
+      .then(response => response.json())
       .then(data => setAccountDetails(data))
       .catch(error => console.error('Error fetching account details:', error));
   }, []);
@@ -122,7 +116,9 @@ const Account = () => {
 };
 
 const Orders = () => {
-  const [orders, setOrders] = useState([]);
+  const [orders, setOrders] = useState([]); // Ensure orders is always an array
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -132,9 +128,23 @@ const Orders = () => {
       },
     })
       .then(response => response.json())
-      .then(data => setOrders(data))
-      .catch(error => console.error('Error fetching orders:', error));
+      .then(data => {
+        if (Array.isArray(data)) {
+          setOrders(data);
+        } else {
+          setOrders([]);
+          setError('Unexpected response format');
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching orders:', error);
+        setError(error.message || 'An error occurred');
+      })
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
 
   return (
     <div>

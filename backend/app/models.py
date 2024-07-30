@@ -45,6 +45,7 @@ class Order(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     order_date = db.Column(db.DateTime, nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
+    items = db.relationship('OrderItem', back_populates='order')
 
 class Payment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
