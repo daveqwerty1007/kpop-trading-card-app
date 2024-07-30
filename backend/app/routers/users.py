@@ -2,11 +2,13 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
     create_access_token, jwt_required, get_jwt_identity
 )
+from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
 from pydantic import ValidationError
 from ..crud import create_user, get_all_users, get_user_by_id, get_user_filter_options, get_user_orders, search_users, update_user, delete_user
 from ..models import User
 from ..schemas import UserSchema
+from ..database import db
 import logging
 
 bp = Blueprint('users', __name__, url_prefix='/users')
@@ -15,12 +17,20 @@ bp = Blueprint('users', __name__, url_prefix='/users')
 def register():
     try:
         data = request.json
+        if not data.get('name') or not data.get('email') or not data.get('password'):
+            return jsonify({"message": "Name, email, and password are required."}), 400
+
         data['password'] = generate_password_hash(data['password'], method='pbkdf2:sha256')
         user_schema = UserSchema(**data)
-        new_user = create_user(user_schema.dict())
+        
+        new_user_data = user_schema.dict()
+        new_user = create_user(new_user_data)  # The create_user function will handle adding and committing
+
         return jsonify({"message": "Registration successful", "user_id": new_user.id}), 201
     except ValidationError as e:
         return jsonify({"errors": e.errors()}), 400
+    except Exception as e:
+        return jsonify({"message": "An error occurred", "error": str(e)}), 500
 
 @bp.route('/login', methods=['POST'])
 def login():

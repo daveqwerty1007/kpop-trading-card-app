@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './UserPanel.css';
 
 const UserPanel = () => {
   const [activeTab, setActiveTab] = useState('account');
-
+  const navigate = useNavigate();
   const renderContent = () => {
     switch (activeTab) {
       case 'account':
@@ -17,10 +18,22 @@ const UserPanel = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    window.location.href = '/';
-  };
+const handleLogout = async () => {
+  const token = localStorage.getItem('authToken');
+  try {
+    await fetch('http://localhost:5001/users/logout', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  } catch (error) {
+    console.error('Error during logout:', error);
+  }
+  localStorage.removeItem('authToken');
+  navigate('/');
+};
 
   return (
     <div className="user-panel">

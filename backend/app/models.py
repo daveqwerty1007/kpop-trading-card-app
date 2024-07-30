@@ -3,7 +3,7 @@ from flask_login import UserMixin
 from .database import db
 
 class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
@@ -31,7 +31,7 @@ class User(db.Model, UserMixin):
         return f"user-{self.id}"
 
 class Card(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     card_name = db.Column(db.String(150), nullable=False)
     artist = db.Column(db.String(150), nullable=False)
     group = db.Column(db.String(150), nullable=False)
@@ -41,7 +41,7 @@ class Card(db.Model):
     image_url = db.Column(db.String(200), nullable=True)
 
 class Order(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     order_date = db.Column(db.DateTime, nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
@@ -58,21 +58,21 @@ class Order(db.Model):
 
 
 class Payment(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id'), nullable=False)
     payment_date = db.Column(db.DateTime, nullable=False)
     payment_method = db.Column(db.String(50), nullable=False)
     payment_status = db.Column(db.String(50), nullable=False)
 
 class Inventory(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     card_id = db.Column(db.Integer, db.ForeignKey('card.id'), nullable=False)
     quantity_available = db.Column(db.Integer, nullable=False)
 
     card = db.relationship('Card', backref=db.backref('inventory_items', lazy=True))
 
 class Admin(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)

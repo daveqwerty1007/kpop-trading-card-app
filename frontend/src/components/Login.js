@@ -76,27 +76,34 @@ const Login = () => {
     e.preventDefault();
     setError('');
 
+    // Ensure all required fields are provided
+    if (!name || !email || !password) {
+        setError('All fields are required.');
+        return;
+    }
+
     try {
-      const response = await fetch('http://localhost:5001/users/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password }),
-        credentials: 'include'
-      });
+        const response = await fetch('http://localhost:5001/users/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, email, password }),
+            credentials: 'include'
+        });
 
-      const data = await response.json();
-      console.log('Registration response:', data);
+        const data = await response.json();
+        console.log('Registration response:', data);
 
-      if (response.ok) {
-        navigate('/user_panel'); // Adjust this path as necessary
-      } else {
-        setError(data.message || 'Unknown error occurred');
-      }
+        if (response.ok) {
+            // Navigate to user panel or login
+            navigate('/user_panel'); // Adjust this path as necessary
+        } else {
+            setError(data.errors ? data.errors.map(err => err.msg).join(', ') : 'Unknown error occurred');
+        }
     } catch (err) {
-      console.error('Registration error:', err);
-      setError('An error occurred. Please try again.');
+        console.error('Registration error:', err);
+        setError('An error occurred. Please try again.');
     }
   };
 
