@@ -94,7 +94,7 @@ const Login = () => {
 
         const data = await response.json();
         console.log('Registration response:', data);
-
+        storeToken(data.access_token);
         if (response.ok) {
             // Navigate to user panel or login
             navigate('/user_panel'); // Adjust this path as necessary

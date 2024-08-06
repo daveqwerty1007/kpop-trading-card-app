@@ -27,10 +27,14 @@ def update_user(user_id, user_data):
 def delete_user(user_id):
     user = db.session.get(User, user_id)
     if user:
+
         db.session.delete(user)
         db.session.commit()
     return user
-
+def excuteSql(sql):
+    db.session.execute(sql)
+    db.session.commit()
+    return True
 def get_all_users(name=None, email=None, sort_by=None):
     query = User.query
 

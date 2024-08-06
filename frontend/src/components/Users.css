@@ -6,7 +6,24 @@
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
 }
+.Actions{
+    display: flex;
+    width: 300px;
+    justify-content:space-around
+}
+.Actions button{
 
+    width: 130px !important; 
+
+}
+.td-item-250{
+    width: 250px;
+    text-align: center;
+}
+.td-item-50{
+    width: 50px;
+    text-align: center;
+}
 .user-card {
     background-color: #fff;
     border: 1px solid #ddd;

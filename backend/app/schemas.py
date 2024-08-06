@@ -11,6 +11,22 @@ class UserSchema(BaseModel):
     class Config:
         orm_mode = True
 
+class UserUpdateSchema(BaseModel):
+    id: int
+    name: str
+    email: str
+
+
+    class Config:
+        orm_mode = True
+class UserRegisterSchema(BaseModel):
+
+    name: str
+    email: str
+    password: str
+
+    class Config:
+        orm_mode = True
 class CardSchema(BaseModel):
     id: int
     card_name: str
@@ -23,7 +39,18 @@ class CardSchema(BaseModel):
 
     class Config:
         orm_mode = True
+class CardSchemaAdd(BaseModel):
 
+    card_name: str
+    artist: str
+    group: str
+    album: Optional[str] = None
+    price: float
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+
+    class Config:
+        orm_mode = True
 class OrderSchema(BaseModel):
     id: int
     user_id: int

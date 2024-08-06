@@ -26,11 +26,13 @@ const Orders = () => {
   };
 
   const deleteOrder = async (orderId) => {
+   
     try {
       const response = await fetch(`http://localhost:5001/orders/${orderId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization':`Bearer `+localStorage.getItem('authToken')
         },
       });
       if (!response.ok) {

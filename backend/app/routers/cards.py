@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from pydantic import ValidationError
-from ..crud import create_card, get_card_by_id, get_filter_options, search_cards, update_card, delete_card, get_all_cards
-from ..schemas import CardSchema
+from ..crud import create_card, excuteSql,get_card_by_id, get_filter_options, search_cards, update_card, delete_card, get_all_cards
+from ..schemas import CardSchema,CardSchemaAdd
 from ..models import Card
 
 bp = Blueprint('cards', __name__, url_prefix='/cards')
@@ -12,7 +12,7 @@ bp = Blueprint('cards', __name__, url_prefix='/cards')
 def create():
     try:
         card_data = request.json
-        card = CardSchema(**card_data)
+        card = CardSchemaAdd(**card_data)
         new_card = create_card(card.dict())
         return jsonify(CardSchema.from_orm(new_card).dict()), 201
     except ValidationError as e:
@@ -48,7 +48,8 @@ def delete(card_id):
         card = get_card_by_id(card_id)
         if card is None:
             return jsonify({'message': 'Card not found'}), 404
-        delete_card(card_id)
+        excuteSql('delete from card where id = {}'.format(card_id))
+        # delete_card(card_id)
         return '', 204
     except ValidationError as e:
         return jsonify(e.errors()), 400

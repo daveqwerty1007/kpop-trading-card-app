@@ -85,8 +85,8 @@ const Account = () => {
 
   const handleSave = () => {
     const token = localStorage.getItem('authToken');
-    fetch('http://localhost:5001/users/current', {
-      method: 'PUT',
+    fetch('http://localhost:5001/users/update_user', {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,

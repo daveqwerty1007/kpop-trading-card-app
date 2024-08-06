@@ -62,7 +62,8 @@
 }
 
 .main-content input[type="text"],
-.main-content input[type="email"],
+.main-content input[type="email"]
+.main-content span
 .main-content button {
     width: 100%;
     padding: 10px;
@@ -72,6 +73,17 @@
     box-sizing: border-box;
 }
 
+/* .main-content button {
+    width: 45%;
+} */
+main-content input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
 .main-content button {
     background-color: #2980b9;
     color: #ffffff;
