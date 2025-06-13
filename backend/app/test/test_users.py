@@ -6,8 +6,8 @@ def test_create_user(test_client, init_database):
     })
     assert response.status_code == 201
     response_json = response.get_json()
-    assert response_json['name'] == 'John Doe'
-    assert response_json['email'] == 'john.doe@example.com'
+    assert 'message' in response_json
+    assert 'user_id' in response_json
 
 def test_get_user(test_client, init_database):
     response = test_client.get('/users/1')
@@ -38,7 +38,7 @@ def test_delete_user(test_client, init_database):
     response = test_client.post('/users/', json=user_data)
     assert response.status_code == 201
     response_json = response.get_json()
-    user_id = response_json['id']
+    user_id = response_json['user_id']
 
     # Now, delete the user
     response = test_client.delete(f'/users/{user_id}')

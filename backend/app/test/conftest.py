@@ -43,7 +43,7 @@ def create_user(test_client):
         'password': 'password123'
     })
     assert response.status_code == 201
-    return response.get_json()['id']
+    return response.get_json()['user_id']
 
 @pytest.fixture
 def create_order(test_client, create_user):

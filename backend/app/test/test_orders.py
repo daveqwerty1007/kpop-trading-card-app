@@ -8,7 +8,7 @@ def test_create_order(test_client, init_database):
         'password': 'password123'
     })
     assert user_response.status_code == 201
-    user_id = user_response.get_json()['id']
+    user_id = user_response.get_json()['user_id']
     
     response = test_client.post('/orders/', json={
         'user_id': user_id,
@@ -28,7 +28,7 @@ def test_get_order(test_client, init_database):
         'password': 'password123'
     })
     assert user_response.status_code == 201
-    user_id = user_response.get_json()['id']
+    user_id = user_response.get_json()['user_id']
 
     order_response = test_client.post('/orders/', json={
         'user_id': user_id,
@@ -49,7 +49,7 @@ def test_update_order(test_client, init_database):
         'password': 'password123'
     })
     assert user_response.status_code == 201
-    user_id = user_response.get_json()['id']
+    user_id = user_response.get_json()['user_id']
 
     order_response = test_client.post('/orders/', json={
         'user_id': user_id,
@@ -73,7 +73,7 @@ def test_delete_order(test_client, init_database):
         'password': 'password123'
     })
     assert user_response.status_code == 201
-    user_id = user_response.get_json()['id']
+    user_id = user_response.get_json()['user_id']
 
     order_response = test_client.post('/orders/', json={
         'user_id': user_id,
