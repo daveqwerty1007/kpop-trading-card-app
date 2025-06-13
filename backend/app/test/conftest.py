@@ -1,9 +1,12 @@
+import os
 import pytest
 from datetime import datetime
 from app import create_app, db
 from flask import current_app
 import logging
 import time
+
+os.environ["TESTING"] = "1"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -43,7 +46,7 @@ def create_user(test_client):
         'password': 'password123'
     })
     assert response.status_code == 201
-    return response.get_json()['id']
+    return response.get_json()['user_id']
 
 @pytest.fixture
 def create_order(test_client, create_user):
