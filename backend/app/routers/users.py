@@ -41,7 +41,7 @@ def update_name_and_email():
 
         data = request.json
         if not data.get('name') or not data.get('email') or not  data.get('id'):
-            return jsonify({"message": "Name, emailare,id required."}), 400
+            return jsonify({"message": "Name, email, and id required."}), 400
         update_user(data.get('id'), data)
         user = User.query.get(data.get('id'))
         if user:
