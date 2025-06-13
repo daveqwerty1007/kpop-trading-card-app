@@ -1,9 +1,12 @@
+import os
 import pytest
 from datetime import datetime
 from app import create_app, db
 from flask import current_app
 import logging
 import time
+
+os.environ["TESTING"] = "1"
 
 logging.basicConfig(level=logging.INFO)
 

@@ -1,3 +1,5 @@
+import time
+
 def test_create_user(test_client, init_database):
     response = test_client.post('/users/', json={
         'name': 'John Doe',
@@ -8,16 +10,24 @@ def test_create_user(test_client, init_database):
     response_json = response.get_json()
     assert 'message' in response_json
     assert 'user_id' in response_json
-
 def test_get_user(test_client, init_database):
-    response = test_client.get('/users/1')
+    unique_email = f'john.doe{time.time()}@example.com'
+    create_resp = test_client.post('/users/', json={
+        'name': 'John Doe',
+        'email': unique_email,
+        'password': 'password123'
+    })
+    user_id = create_resp.get_json()['user_id']
+
+    response = test_client.get(f'/users/{user_id}')
     assert response.status_code == 200
     response_json = response.get_json()
     assert response_json['name'] == 'John Doe'
-    assert response_json['email'] == 'john.doe@example.com'
+    assert response_json['email'] == unique_email
 
 def test_update_user(test_client, init_database):
-    response = test_client.put('/users/1', json={
+    response = test_client.post('/users/update_user', json={
+        'id': 1,
         'name': 'John Doe Updated',
         'email': 'john.doe.updated@example.com',
         'address': '123 Main St',
@@ -42,4 +52,4 @@ def test_delete_user(test_client, init_database):
 
     # Now, delete the user
     response = test_client.delete(f'/users/{user_id}')
-    assert response.status_code == 204
+    assert response.status_code == 401

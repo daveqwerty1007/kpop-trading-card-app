@@ -41,7 +41,7 @@ def update_name_and_email():
 
         data = request.json
         if not data.get('name') or not data.get('email') or not  data.get('id'):
-            return jsonify({"message": "Name, emailare,id required."}), 400
+            return jsonify({"message": "Name, email, and id required."}), 400
         update_user(data.get('id'), data)
         user = User.query.get(data.get('id'))
         if user:
@@ -84,12 +84,23 @@ def logout():
 def create():
     try:
         data = request.json
+        data['id'] = None
         data['password'] = generate_password_hash(data['password'], method='pbkdf2:sha256')
-        user_schema = UserSchema(**data)
+        user_schema = UserRegisterSchema(**data)
         new_user = create_user(user_schema.dict())
         return jsonify({"message": "User created successfully", "user_id": new_user.id}), 201
     except ValidationError as e:
         return jsonify({"errors": e.errors()}), 400
+
+@bp.route('/<int:user_id>', methods=['GET'])
+def detail(user_id):
+    try:
+        user = get_user_by_id(user_id)
+        if user is None:
+            return jsonify({"message": "User not found"}), 404
+        return jsonify(UserSchema.from_orm(user).dict()), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @bp.route('/<int:user_id>', methods=['DELETE'])
 @jwt_required()

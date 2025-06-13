@@ -20,14 +20,18 @@ def create_app():
     jwt = JWTManager(app)
 
     # Database configuration
-    DB_CONFIG = {
-        'host': 'database-1.cbko6om64nur.us-east-1.rds.amazonaws.com',
-        'user': 'admin',
-        'password': 'nCbx9SyJPoUXXT8zcw4d',
-        'database': 'kpop_trading'
-    }
-
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+mysqlconnector://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}"
+    if os.environ.get("TESTING") == "1":
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    else:
+        DB_CONFIG = {
+            'host': 'database-1.cbko6om64nur.us-east-1.rds.amazonaws.com',
+            'user': 'admin',
+            'password': 'nCbx9SyJPoUXXT8zcw4d',
+            'database': 'kpop_trading'
+        }
+        app.config['SQLALCHEMY_DATABASE_URI'] = (
+            f"mysql+mysqlconnector://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}"
+        )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialize the database

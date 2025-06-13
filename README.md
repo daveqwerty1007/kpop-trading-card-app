@@ -11,33 +11,29 @@ We will use trading data from the past 3 months to initialize the application an
 ## Folder Structure
 kpop-trading-card-app/
 ├── backend/
-│ ├── pycache/
-│ ├── init.py
-│ ├── load_data.py
-│ ├── routes/
-│ │ ├── pycache/
-│ │ ├── init.py
-│ │ ├── branch_routes.py
-│ │ ├── customer_routes.py
-│ │ ├── delivery_routes.py
-│ │ ├── employee_routes.py
-│ │ ├── kpopgroup_routes.py
-│ │ ├── order_routes.py
-│ │ ├── product_routes.py
-│ │ ├── shipping_routes.py
-│ │ └── warehouse_routes.py
-│ ├── Setup.sql
-│ └── config.py
+│ ├── app/
+│ │ ├── __init__.py
+│ │ ├── main.py
+│ │ ├── crud.py
+│ │ ├── database.py
+│ │ └── routers/
+│ │     ├── __init__.py
+│ │     ├── admin.py
+│ │     ├── cards.py
+│ │     ├── cart_items.py
+│ │     ├── inventory.py
+│ │     ├── order_items.py
+│ │     ├── orders.py
+│ │     ├── payments.py
+│ │     └── users.py
+│ └── data/
+│     └── loaddata.py
 ├── frontend/
-│ ├── static/
-│ └── templates/
-│ ├── branches.html
-│ ├── cart.html
-│ ├── index.html
-│ ├── login.html
-│ ├── products.html
-│ ├── signup.html
-├── keys.pem
+│ ├── public/
+│ └── src/
+├── SQLquery/
+│ └── Setup.sql
+├── key-pair.pem
 ├── Procfile
 ├── README.md
 ├── requirements.txt
@@ -76,7 +72,7 @@ kpop-trading-card-app/
         ```
     - load the sample data:
         ```bash
-        python backend/load_data.py
+        python backend/data/loaddata.py
         ```
 
 5. **Run the Application**
@@ -88,15 +84,15 @@ kpop-trading-card-app/
 ## Project Structure
 
 ### Backend
-- **backend/__init__.py:** Initializes the backend module.
-- **backend/load_data.py:** Script to load sample data into the database.
-- **backend/routes/:** Creating URL to call or update data when needed 
-- **backend/Setup.sql:** SQL script to set up the database schema.
-- **backend/config.py:** Store RDS login credential and other settings.
+- **backend/app/__init__.py:** Initializes the backend module.
+- **backend/data/loaddata.py:** Script to load sample data into the database.
+- **backend/app/routers/:** Creating URL to call or update data when needed 
+- **SQLquery/Setup.sql:** SQL script to set up the database schema.
+- **backend/app/database.py:** Store RDS login credential and other settings.
 
 ### Frontend
-- **frontend/static/:** Static files for styles and JavaScript.
-- **frontend/templates/:** Webpage file.
+- **frontend/public/:** Static files for styles and JavaScript.
+- **frontend/src/:** Webpage file.
 
 ## Features
 - User authentication
