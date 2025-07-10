@@ -6,7 +6,7 @@ from datetime import datetime
 from ..utils import admin_required
 from ..crud import (
     create_order, get_all_orders, get_order_by_id, get_order_filter_options, get_user_orders, search_orders, update_order, delete_order,
-    update_cart_item, delete_cart_item, get_cart_items, clear_cart, create_payment
+    update_cart_item_by_user_and_card, delete_cart_item_by_user_and_card, get_cart_items, clear_cart, create_payment
 )
 from ..schemas import OrderSchema
 from ..models import Card
@@ -58,7 +58,7 @@ def update_cart_item_route(card_id):
     try:
         user_id = get_jwt_identity()
         quantity = request.json['quantity']
-        update_cart_item(user_id, card_id, quantity)
+        update_cart_item_by_user_and_card(user_id, card_id, quantity)
         return jsonify({'message': 'Cart item updated'}), 200
     except ValidationError as e:
         return jsonify(e.errors()), 400
@@ -70,7 +70,7 @@ def update_cart_item_route(card_id):
 def delete_cart_item_route(card_id):
     try:
         user_id = get_jwt_identity()
-        delete_cart_item(user_id, card_id)
+        delete_cart_item_by_user_and_card(user_id, card_id)
         return jsonify({'message': 'Cart item deleted'}), 200
     except ValidationError as e:
         return jsonify(e.errors()), 400
