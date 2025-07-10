@@ -461,8 +461,33 @@ def update_cart_item(cart_item_id, cart_item_data):
         db.session.commit()
     return cart_item
 
+
+def update_cart_item_by_user_and_card(user_id, card_id, quantity):
+    """Update quantity of a cart item identified by user and card.
+
+    If the cart item does not exist, a new record is created with the
+    provided quantity.
+    """
+    cart_item = CartItem.query.filter_by(user_id=user_id, card_id=card_id).first()
+    if cart_item:
+        cart_item.quantity = quantity
+    else:
+        cart_item = CartItem(user_id=user_id, card_id=card_id, quantity=quantity)
+        db.session.add(cart_item)
+    db.session.commit()
+    return cart_item
+
 def delete_cart_item(cart_item_id):
     cart_item = db.session.get(CartItem, cart_item_id)
+    if cart_item:
+        db.session.delete(cart_item)
+        db.session.commit()
+    return cart_item
+
+
+def delete_cart_item_by_user_and_card(user_id, card_id):
+    """Delete a cart item based on user and card identifiers."""
+    cart_item = CartItem.query.filter_by(user_id=user_id, card_id=card_id).first()
     if cart_item:
         db.session.delete(cart_item)
         db.session.commit()
