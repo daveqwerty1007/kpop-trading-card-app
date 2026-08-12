@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import './CardDetail.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
@@ -16,21 +17,10 @@ function CardDetail() {
   }, [id]);
 
   const fetchCardData = () => {
-    const token = localStorage.getItem('authToken');
-    fetch(`http://localhost:5001/cards/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
+    api.get(`/cards/${id}`)
       .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to fetch card data');
-        }
-        return response.json();
-      })
-      .then(data => {
-        setCard(data);
-        fetchRelatedCards(data.artist.split(' ')[0]);
+        setCard(response.data);
+        fetchRelatedCards(response.data.artist.split(' ')[0]);
       })
       .catch(error => {
         console.error('Error fetching card:', error);
@@ -39,15 +29,9 @@ function CardDetail() {
   };
 
   const fetchRelatedCards = (artistFirstName) => {
-    const token = localStorage.getItem('authToken');
-    fetch(`http://localhost:5001/cards/search?q=${artistFirstName}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-      .then(response => response.json())
-      .then(data => {
-        setRelatedCards(data.filter(relatedCard => relatedCard.id !== parseInt(id)));
+    api.get(`/cards/search?q=${artistFirstName}`)
+      .then(response => {
+        setRelatedCards(response.data.filter(relatedCard => relatedCard.id !== parseInt(id)));
       })
       .catch(error => {
         console.error('Error fetching related cards:', error);
@@ -55,26 +39,12 @@ function CardDetail() {
   };
 
   const handleAddToCart = () => {
-    const token = localStorage.getItem('authToken');
-    fetch('http://localhost:5001/cart_items/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        card_id: card.id,
-        quantity: quantity
-      })
+    api.post('/cart_items/', {
+      card_id: card.id,
+      quantity: quantity
     })
     .then(response => {
-      if (!response.ok) {
-        throw new Error('Failed to add item to cart');
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log(`Added ${quantity} of ${data.card_name} to the cart.`);
+      console.log(`Added ${quantity} of ${response.data.card_name} to the cart.`);
     })
     .catch(error => console.error('Error adding item to cart:', error));
   };

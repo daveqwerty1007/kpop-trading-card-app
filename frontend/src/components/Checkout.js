@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import './Checkout.css';
 
 const Checkout = () => {
@@ -11,25 +12,16 @@ const Checkout = () => {
 
   useEffect(() => {
     const fetchCartData = async () => {
-      const token = localStorage.getItem('authToken');
       try {
-        const response = await fetch('http://localhost:5001/orders/cart', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch cart data');
-        }
-        const data = await response.json();
-        setTotalAmount(data.total_amount || 0);
-        setCartItems(data.cart_items.map(item => ({
+        const response = await api.get('/orders/cart');
+        setTotalAmount(response.data.total_amount || 0);
+        setCartItems(response.data.cart_items.map(item => ({
           ...item,
           name: item.card_name,
           price: item.price,
         })));
       } catch (error) {
-        setError(error.message);
+        setError('Failed to fetch cart data');
       }
     };
 
@@ -37,23 +29,11 @@ const Checkout = () => {
   }, []);
 
   const handleCheckout = async () => {
-    const token = localStorage.getItem('authToken');
     try {
-      const response = await fetch('http://localhost:5001/orders/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ payment_method: paymentMethod }),
-      });
-      if (!response.ok) {
-        throw new Error('Checkout failed');
-      }
-      const data = await response.json();
-      navigate(`/order-confirmation/${data.order_id}`);
+      const response = await api.post('/orders/checkout', { payment_method: paymentMethod });
+      navigate(`/order-confirmation/${response.data.order_id}`);
     } catch (error) {
-      setError(error.message);
+      setError('Checkout failed');
     }
   };
 

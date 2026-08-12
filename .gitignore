@@ -1,2 +1,4 @@
 
 .DS_Store
+*.pem
+backend/app/*.db

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from '../services/api';
 import './AdminPanel.css';
 import Dashboard from './Dashboard';
 import Orders from './Orders';
@@ -10,15 +11,9 @@ const AdminPanel = () => {
   const [adminName, setAdminName] = useState('Admin');
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      fetch('http://localhost:5001/admin/profile', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      })
-        .then(response => response.json())
-        .then(data => setAdminName(data.name || 'Admin'))
+    if (localStorage.getItem('authToken')) {
+      api.get('/admin/profile')
+        .then(response => setAdminName(response.data.name || 'Admin'))
         .catch(error => console.error('Error fetching admin profile:', error));
     }
   }, []);

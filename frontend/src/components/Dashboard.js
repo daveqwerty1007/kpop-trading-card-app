@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import api from '../services/api';
 import './Dashboard.css';
 
 // Register the components
@@ -18,20 +19,11 @@ const Dashboard = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:5001/admin/dashboard', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard stats');
-      }
-      const data = await response.json();
-      setStats(data);
-      setSalesData(data.sales_data_last_week);
+      const response = await api.get('/admin/dashboard');
+      setStats(response.data);
+      setSalesData(response.data.sales_data_last_week);
     } catch (error) {
-      setError(error.message);
+      setError('Failed to fetch dashboard stats');
     } finally {
       setLoading(false);
     }
@@ -85,12 +77,14 @@ const Dashboard = () => {
   );
 };
 
+const COLLAPSED_VISIBLE_COUNT = 3;
+
 const CollapsibleList = ({ title, items = [] }) => {
   const [collapsed, setCollapsed] = useState(true);
 
   const toggleCollapse = () => setCollapsed(!collapsed);
 
-  const visibleItems = collapsed ? items.slice(0, 3) : items;
+  const visibleItems = collapsed ? items.slice(0, COLLAPSED_VISIBLE_COUNT) : items;
 
   return (
     <div className="section">
@@ -122,7 +116,7 @@ const CollapsibleList = ({ title, items = [] }) => {
           </li>
         ))}
       </ul>
-      {items.length > 5 && (
+      {items.length > COLLAPSED_VISIBLE_COUNT && (
         <button onClick={toggleCollapse}>
           {collapsed ? 'Show More' : 'Show Less'}
         </button>

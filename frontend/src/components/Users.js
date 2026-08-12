@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import api from '../services/api';
 import './Users.css';
 
 const Users = () => {
@@ -13,18 +14,15 @@ const Users = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:5001/users/list');
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-      const data = await response.json();
+      const response = await api.get('/users/list');
+      const data = response.data;
       data.forEach(user => {
         user.nameNew = user.name
         user.emailNew = user.email
       });
       setUsers(data);
     } catch (error) {
-      setError(error.message);
+      setError('Failed to fetch users');
     } finally {
       setLoading(false);
     }
@@ -37,7 +35,7 @@ const Users = () => {
   const cancelUser = async (user) => {
     user.isUpdate = !user.isUpdate
     user.nameNew = user.name
-    user.emailNew = user.emailNew
+    user.emailNew = user.email
     setIsUpdate(!isUpdate)
 
   };
@@ -48,45 +46,23 @@ const Users = () => {
     console.log(event.target,user)
   };
   const saveUser = async (user) => {
-   
     try {
-      const response = await fetch(`http://localhost:5001/admin/update_user`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization':`Bearer `+localStorage.getItem('authToken')
-        },
-        body: JSON.stringify({email:user.emailNew,id:user.id,name:user.nameNew}),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete user');
-      }
+      await api.put('/admin/update_user', { email: user.emailNew, id: user.id, name: user.nameNew });
       user.isUpdate = false
       user.email = user.emailNew
       user.name = user.nameNew
       setIsUpdate(!isUpdate)
     } catch (error) {
-      setError(error.message);
+      setError('Failed to update user');
     }
   };
   const deleteUser = async (userId) => {
     try {
-      const response = await fetch(`http://localhost:5001/admin/delete_user`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization':`Bearer `+localStorage.getItem('authToken')
-        },
-        body: JSON.stringify({id:userId}),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete user');
-      }
+      await api.delete('/admin/delete_user', { data: { id: userId } });
       fetchUsers()
       // setUsers(users.filter(user => user.id !== userId));
     } catch (error) {
-      setError(error.message);
+      setError('Failed to delete user');
     }
   };
 

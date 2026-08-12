@@ -1,5 +1,8 @@
 import os
 from flask import Flask, jsonify, request, render_template
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_SQLITE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'kpop_trading.db')
 from flask_cors import CORS 
 from .database import init_db, db
 from .routers import users, cards, orders, payments, inventory, admin, order_items, cart_items
@@ -23,15 +26,10 @@ def create_app():
     if os.environ.get("TESTING") == "1":
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     else:
-        DB_CONFIG = {
-            'host': 'database-1.cbko6om64nur.us-east-1.rds.amazonaws.com',
-            'user': 'admin',
-            'password': 'nCbx9SyJPoUXXT8zcw4d',
-            'database': 'kpop_trading'
-        }
-        app.config['SQLALCHEMY_DATABASE_URI'] = (
-            f"mysql+mysqlconnector://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}"
-        )
+        # Defaults to a local SQLite file. Set DATABASE_URL to point at a
+        # real MySQL/Postgres server instead, e.g.:
+        # mysql+mysqlconnector://user:password@host/dbname
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', DEFAULT_SQLITE_URI)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialize the database

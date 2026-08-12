@@ -20,18 +20,29 @@ def get(cart_item_id):
     cart_item = get_cart_item_by_id(cart_item_id)
     if cart_item is None:
         return jsonify({'message': 'Cart item not found'}), 404
+    if cart_item.user_id != get_jwt_identity():
+        return jsonify({'message': 'Forbidden'}), 403
     return jsonify(CartItemSchema.from_orm(cart_item).dict())
 
 @bp.route('/<int:cart_item_id>', methods=['PUT'])
 @jwt_required()
 def update(cart_item_id):
-    cart_item_data = request.json
-    cart_item = update_cart_item(cart_item_id, cart_item_data)
+    cart_item = get_cart_item_by_id(cart_item_id)
+    if cart_item is None:
+        return jsonify({'message': 'Cart item not found'}), 404
+    if cart_item.user_id != get_jwt_identity():
+        return jsonify({'message': 'Forbidden'}), 403
+    cart_item = update_cart_item(cart_item_id, request.json)
     return jsonify(CartItemSchema.from_orm(cart_item).dict())
 
 @bp.route('/<int:cart_item_id>', methods=['DELETE'])
 @jwt_required()
 def delete(cart_item_id):
+    cart_item = get_cart_item_by_id(cart_item_id)
+    if cart_item is None:
+        return jsonify({'message': 'Cart item not found'}), 404
+    if cart_item.user_id != get_jwt_identity():
+        return jsonify({'message': 'Forbidden'}), 403
     delete_cart_item(cart_item_id)
     return '', 204
 

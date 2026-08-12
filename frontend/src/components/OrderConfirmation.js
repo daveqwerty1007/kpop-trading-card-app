@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import api from '../services/api';
 import './OrderConfirmation.css';
 
 const OrderConfirmation = () => {
@@ -10,20 +11,11 @@ const OrderConfirmation = () => {
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      const token = localStorage.getItem('authToken');
       try {
-        const response = await fetch(`http://localhost:5001/orders/${order_id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch order details');
-        }
-        const data = await response.json();
-        setOrder(data);
+        const response = await api.get(`/orders/${order_id}`);
+        setOrder(response.data);
       } catch (error) {
-        setError(error.message);
+        setError('Failed to fetch order details');
       } finally {
         setLoading(false);
       }

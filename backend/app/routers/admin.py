@@ -1,10 +1,11 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, jwt_required
 from werkzeug.security import check_password_hash, generate_password_hash
 from pydantic import ValidationError
-from ..crud import create_user, excuteSql,detect_fraudulent_orders, get_old_inventory, get_order_count, get_product_count, get_restock_list, get_sales_data_last_week, get_top_spending_users, get_total_sales, get_user_count, update_user, delete_user
+from ..crud import create_user, detect_fraudulent_orders, get_old_inventory, get_order_count, get_product_count, get_restock_list, get_sales_data_last_week, get_top_spending_users, get_total_sales, get_user_count, update_user, delete_user
 from ..models import Admin
 from ..schemas import UserSchema, AdminSchema,UserUpdateSchema
+from ..utils import admin_required, current_profile
 import logging
 
 logging.basicConfig(level=logging.DEBUG)  # Set the level to DEBUG or INFO as needed
@@ -13,15 +14,9 @@ bp = Blueprint('admin', __name__, url_prefix='/admin')
 @bp.route('/profile', methods=['GET'])
 @jwt_required()
 def profile():
-    current_user_id = get_jwt_identity()
-    user = Admin.query.get(current_user_id)
-    if user:
-        user_data = {
-            "id": user.id,
-            "email": user.email,
-            "name": user.name
-        }
-        return jsonify(user_data), 200
+    admin_data = current_profile(Admin)
+    if admin_data:
+        return jsonify(admin_data), 200
     return jsonify({"message": "User not found"}), 404
 @bp.route('/login', methods=['POST'])
 def admin_login():
@@ -48,7 +43,7 @@ def logout():
     return jsonify({"message": "Logout successful"}), 200
 
 @bp.route('/create_user', methods=['POST'])
-@jwt_required()
+@admin_required
 def create_user_route():
     try:
         data = request.json
@@ -60,7 +55,7 @@ def create_user_route():
         return jsonify({"errors": e.errors()}), 400
 
 @bp.route('/update_user', methods=['PUT'])
-@jwt_required()
+@admin_required
 def update_user_route():
     try:
         user_id = request.json.get('id')
@@ -79,17 +74,16 @@ def update_user_route():
         return jsonify({"errors": e.errors()}), 400
 
 @bp.route('/delete_user', methods=['DELETE'])
-@jwt_required()
+@admin_required
 def delete_user_route():
     user_id = request.json.get('id')
-    sql = 'delete from user where id = {}'.format(user_id)
-    user = excuteSql(sql)
+    user = delete_user(user_id)
     if user:
-        return jsonify({"message": f"User ID {user_id} deleted successfully."}), 204
-    return jsonify({"message": "successful"}), 200
+        return '', 204
+    return jsonify({"message": "User not found"}), 404
 
 @bp.route('/dashboard', methods=['GET'])
-@jwt_required()
+@admin_required
 def dashboard():
     try:
         response = {

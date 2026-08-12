@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from './AuthContext';
+import api from '../services/api';
 import './UserPanel.css';
 
 const UserPanel = () => {
   const [activeTab, setActiveTab] = useState('account');
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const renderContent = () => {
     switch (activeTab) {
       case 'account':
@@ -19,19 +22,12 @@ const UserPanel = () => {
   };
 
 const handleLogout = async () => {
-  const token = localStorage.getItem('authToken');
   try {
-    await fetch('http://localhost:5001/users/logout', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    await api.post('/users/logout');
   } catch (error) {
     console.error('Error during logout:', error);
   }
-  localStorage.removeItem('authToken');
+  logout();
   navigate('/');
 };
 
@@ -63,16 +59,8 @@ const Account = () => {
   const [editing, setEditing] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    fetch('http://localhost:5001/users/current', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-      .then(response => response.json())
-      .then(data => setAccountDetails(data))
+    api.get('/users/current')
+      .then(response => setAccountDetails(response.data))
       .catch(error => console.error('Error fetching account details:', error));
   }, []);
 
@@ -84,18 +72,9 @@ const Account = () => {
   };
 
   const handleSave = () => {
-    const token = localStorage.getItem('authToken');
-    fetch('http://localhost:5001/users/update_user', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(accountDetails),
-    })
-      .then(response => response.json())
-      .then(data => {
-        setAccountDetails(data);
+    api.post('/users/update_user', accountDetails)
+      .then(response => {
+        setAccountDetails(response.data);
         setEditing(false);
       })
       .catch(error => console.error('Error updating account details:', error));
@@ -134,16 +113,10 @@ const Orders = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    fetch('http://localhost:5001/users/orders', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setOrders(data);
+    api.get('/users/orders')
+      .then(response => {
+        if (Array.isArray(response.data)) {
+          setOrders(response.data);
         } else {
           setOrders([]);
           setError('Unexpected response format');
@@ -151,7 +124,7 @@ const Orders = () => {
       })
       .catch(error => {
         console.error('Error fetching orders:', error);
-        setError(error.message || 'An error occurred');
+        setError('An error occurred');
       })
       .finally(() => setLoading(false));
   }, []);
@@ -192,14 +165,8 @@ const Settings = () => {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    fetch('http://localhost:5001/users/settings', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-      .then(response => response.json())
-      .then(data => setSettings(data))
+    api.get('/users/settings')
+      .then(response => setSettings(response.data))
       .catch(error => console.error('Error fetching settings:', error));
   }, []);
 
@@ -211,17 +178,8 @@ const Settings = () => {
   };
 
   const handleSave = () => {
-    const token = localStorage.getItem('authToken');
-    fetch('http://localhost:5001/users/settings', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(settings),
-    })
-      .then(response => response.json())
-      .then(data => setSettings(data))
+    api.put('/users/settings', settings)
+      .then(response => setSettings(response.data))
       .catch(error => console.error('Error saving settings:', error));
   };
 

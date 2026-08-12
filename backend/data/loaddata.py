@@ -16,14 +16,11 @@ from app.database import db, init_db
 
 app = Flask(__name__)
 # Database configuration
-DB_CONFIG = {
-    'host': 'database-1.cbko6om64nur.us-east-1.rds.amazonaws.com',
-    'user': 'admin',
-    'password': 'nCbx9SyJPoUXXT8zcw4d',
-    'database': 'kpop_trading'
-}
-
-app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+mysqlconnector://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}"
+# Defaults to the same local SQLite file the app itself uses. Set
+# DATABASE_URL to point at a real MySQL/Postgres server instead, e.g.:
+# mysql+mysqlconnector://user:password@host/dbname
+default_sqlite_uri = 'sqlite:///' + os.path.join(backend_dir, 'app', 'kpop_trading.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', default_sqlite_uri)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize the database

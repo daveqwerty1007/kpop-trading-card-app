@@ -1,48 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import api from '../services/api';
 import './Cart.css';
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
-  const [totalAmount, setTotalAmount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     const fetchCartData = async () => {
-      const token = localStorage.getItem('authToken');
       try {
-        const response = await fetch('http://localhost:5001/orders/cart', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch cart data');
-        }
-        const data = await response.json();
-        setTotalAmount(data.total_amount || 0);
-
-        const detailedItems = await Promise.all(data.cart_items.map(async (item) => {
-          const response = await fetch(`http://localhost:5001/cards/${item.card_id}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
-          if (!response.ok) {
-            throw new Error('Failed to fetch item details');
-          }
-          const cardData = await response.json();
-          return {
-            ...item,
-            name: cardData.card_name,
-            price: cardData.price,
-          };
-        }));
-        setCartItems(detailedItems);
+        const response = await api.get('/orders/cart');
+        setCartItems(response.data.cart_items.map(item => ({ ...item, name: item.card_name })));
       } catch (error) {
-        setError(error.message);
+        setError('Failed to fetch cart data');
       } finally {
         setLoading(false);
       }
@@ -51,49 +24,30 @@ const Cart = () => {
     fetchCartData();
   }, []);
 
+  const totalAmount = useMemo(
+    () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [cartItems]
+  );
+
   const handleQuantityChange = async (cartItemId, newQuantity) => {
-    const token = localStorage.getItem('authToken');
     if (newQuantity < 1) return;  // Prevent setting a quantity less than 1
 
     try {
-      const response = await fetch(`http://localhost:5001/cart_items/${cartItemId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ quantity: newQuantity }),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to update cart item');
-      }
-      const updatedCartItem = await response.json();
+      await api.put(`/cart_items/${cartItemId}`, { quantity: newQuantity });
       setCartItems(prevItems =>
         prevItems.map(item => item.id === cartItemId ? { ...item, quantity: newQuantity } : item)
       );
-      setTotalAmount(prevTotal => prevTotal + (updatedCartItem.price * (newQuantity - updatedCartItem.quantity)));
     } catch (error) {
-      setError(error.message);
+      setError('Failed to update cart item');
     }
   };
 
   const handleRemoveItem = async (cartItemId) => {
-    const token = localStorage.getItem('authToken');
     try {
-      const response = await fetch(`http://localhost:5001/cart_items/${cartItemId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to remove cart item');
-      }
-      const removedItem = cartItems.find(item => item.id === cartItemId);
+      await api.delete(`/cart_items/${cartItemId}`);
       setCartItems(prevItems => prevItems.filter(item => item.id !== cartItemId));
-      setTotalAmount(prevTotal => prevTotal - (removedItem.price * removedItem.quantity));
     } catch (error) {
-      setError(error.message);
+      setError('Failed to remove cart item');
     }
   };
 

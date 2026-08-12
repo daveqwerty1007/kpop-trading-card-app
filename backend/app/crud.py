@@ -31,10 +31,6 @@ def delete_user(user_id):
         db.session.delete(user)
         db.session.commit()
     return user
-def excuteSql(sql):
-    db.session.execute(sql)
-    db.session.commit()
-    return True
 def get_all_users(name=None, email=None, sort_by=None):
     query = User.query
 
@@ -56,30 +52,25 @@ def get_all_users(name=None, email=None, sort_by=None):
 
     return query.all()
 
-def get_user_filter_options():
+def _distinct_values(columns_by_key):
     try:
-        names = db.session.query(User.name).distinct().all()
-        emails = db.session.query(User.email).distinct().all()
-
-        # Extract values from the tuples
-        names = [name[0] for name in names]
-        emails = [email[0] for email in emails]
-
         return {
-            'names': names,
-            'emails': emails,
+            key: [row[0] for row in db.session.query(column).distinct().all()]
+            for key, column in columns_by_key.items()
         }
     except Exception as e:
         raise RuntimeError(f"Error fetching filter options: {str(e)}")
 
+def _search(query, columns, query_string):
+    pattern = f"%{query_string}%"
+    conditions = [column.ilike(pattern) for column in columns]
+    return query.filter(or_(*conditions)).all()
+
+def get_user_filter_options():
+    return _distinct_values({'names': User.name, 'emails': User.email})
+
 def search_users(query_string):
-    query_string = f"%{query_string}%"
-    search_conditions = [
-        User.name.ilike(query_string),
-        User.email.ilike(query_string),
-    ]
-    results = User.query.filter(or_(*search_conditions)).all()
-    return results
+    return _search(User.query, [User.name, User.email], query_string)
 
 def get_user_orders(user_id):
     orders = db.session.query(Order).options(
@@ -168,34 +159,10 @@ def get_all_cards(artist=None, group=None, album=None, min_price=None, max_price
     return query.all()
 
 def get_filter_options():
-    try:
-        artists = db.session.query(Card.artist).distinct().all()
-        albums = db.session.query(Card.album).distinct().all()
-        groups = db.session.query(Card.group).distinct().all()
-
-        # Extract values from the tuples
-        artists = [artist[0] for artist in artists]
-        albums = [album[0] for album in albums]
-        groups = [group[0] for group in groups]
-
-        return {
-            'artists': artists,
-            'albums': albums,
-            'groups': groups
-        }
-    except Exception as e:
-        raise RuntimeError(f"Error fetching filter options: {str(e)}")
+    return _distinct_values({'artists': Card.artist, 'albums': Card.album, 'groups': Card.group})
 
 def search_cards(query_string):
-    query_string = f"%{query_string}%"
-    search_conditions = [
-        Card.card_name.ilike(query_string),
-        Card.artist.ilike(query_string),
-        Card.album.ilike(query_string),
-        Card.group.ilike(query_string)
-    ]
-    results = Card.query.filter(or_(*search_conditions)).all()
-    return results
+    return _search(Card.query, [Card.card_name, Card.artist, Card.album, Card.group], query_string)
 
 # Order CRUD operations
 def create_order(order_data):
@@ -209,15 +176,18 @@ def get_order_by_id(order_id):
 
 def update_order(order_id, order_data):
     order = Order.query.get(order_id)
-    for key, value in order_data.items():
-        setattr(order, key, value)
-    db.session.commit()
+    if order:
+        for key, value in order_data.items():
+            setattr(order, key, value)
+        db.session.commit()
     return order
 
 def delete_order(order_id):
     order = Order.query.get(order_id)
-    db.session.delete(order)
-    db.session.commit()
+    if order:
+        db.session.delete(order)
+        db.session.commit()
+    return order
 
 def get_all_orders(user_id=None, min_date=None, max_date=None, min_total=None, max_total=None, sort_by=None):
     query = Order.query
@@ -260,13 +230,10 @@ def get_order_filter_options():
         raise RuntimeError(f"Error fetching filter options: {str(e)}")
     
 def search_orders(query_string):
-    query_string = f"%{query_string}%"
-    search_conditions = [
-        User.name.ilike(query_string),
-        # Add other search conditions if there are other searchable fields in Order
-    ]
-    results = Order.query.join(User, User.id == Order.user_id).filter(or_(*search_conditions)).all()
-    return results
+    return _search(Order.query.join(User, User.id == Order.user_id), [User.name], query_string)
+
+def calculate_cart_total(cart_items):
+    return sum(item.card.price * item.quantity for item in cart_items)
 
 
 
@@ -462,32 +429,8 @@ def update_cart_item(cart_item_id, cart_item_data):
     return cart_item
 
 
-def update_cart_item_by_user_and_card(user_id, card_id, quantity):
-    """Update quantity of a cart item identified by user and card.
-
-    If the cart item does not exist, a new record is created with the
-    provided quantity.
-    """
-    cart_item = CartItem.query.filter_by(user_id=user_id, card_id=card_id).first()
-    if cart_item:
-        cart_item.quantity = quantity
-    else:
-        cart_item = CartItem(user_id=user_id, card_id=card_id, quantity=quantity)
-        db.session.add(cart_item)
-    db.session.commit()
-    return cart_item
-
 def delete_cart_item(cart_item_id):
     cart_item = db.session.get(CartItem, cart_item_id)
-    if cart_item:
-        db.session.delete(cart_item)
-        db.session.commit()
-    return cart_item
-
-
-def delete_cart_item_by_user_and_card(user_id, card_id):
-    """Delete a cart item based on user and card identifiers."""
-    cart_item = CartItem.query.filter_by(user_id=user_id, card_id=card_id).first()
     if cart_item:
         db.session.delete(cart_item)
         db.session.commit()

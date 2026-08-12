@@ -9,6 +9,7 @@ from ..crud import create_user, get_all_users, get_user_by_id, get_user_filter_o
 from ..models import User
 from ..schemas import UserSchema,UserRegisterSchema
 from ..database import db
+from ..utils import current_profile
 import logging
 
 bp = Blueprint('users', __name__, url_prefix='/users')
@@ -60,20 +61,6 @@ def login():
         access_token = create_access_token(identity=user.id)
         return jsonify({"message": "Login successful", "access_token": access_token, "user_id": user.id}), 200
     return jsonify({"message": "Invalid credentials"}), 401
-
-@bp.route('/profile', methods=['GET'])
-@jwt_required()
-def profile():
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    if user:
-        user_data = {
-            "id": user.id,
-            "email": user.email,
-            "name": user.name
-        }
-        return jsonify(user_data), 200
-    return jsonify({"message": "User not found"}), 404
 
 @bp.route('/logout', methods=['POST'])
 def logout():
@@ -148,10 +135,8 @@ def search_users_route():
 @bp.route('/current', methods=['GET'])
 @jwt_required()
 def get_current_user():
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    if user:
-        user_data = UserSchema.from_orm(user).dict()
+    user_data = current_profile(User)
+    if user_data:
         return jsonify(user_data), 200
     return jsonify({"message": "User not found"}), 404
 

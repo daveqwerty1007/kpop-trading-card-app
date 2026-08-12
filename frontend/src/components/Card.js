@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'; 
+import { useNavigate, useLocation } from 'react-router-dom';
+import api from '../services/api';
 import './Card.css';
 
 const CardList = () => {
@@ -44,7 +45,6 @@ const CardList = () => {
   }, [filters, currentPage]);
 
   const fetchFilteredCards = () => {
-    let url = 'http://localhost:5001/cards/list';
     const params = new URLSearchParams({
       ...filters,
       artist: filters.artist.join(','),
@@ -53,16 +53,16 @@ const CardList = () => {
       page: currentPage,
       limit: cardsPerPage
     });
-    if (params.toString()) {
-      url += `?${params.toString()}`;
-    }
 
-    fetch(url)
-      .then(response => response.json())
-      .then(data => {
+    api.get(`/cards/list?${params.toString()}`)
+      .then(response => {
+        const data = response.data;
         if (Array.isArray(data)) {
-          setCards(data);
-          setTotalPages(Math.ceil(data.total / cardsPerPage));
+          // The backend returns the full filtered list regardless of page/limit,
+          // so pagination is applied client-side.
+          setTotalPages(Math.max(1, Math.ceil(data.length / cardsPerPage)));
+          const start = (currentPage - 1) * cardsPerPage;
+          setCards(data.slice(start, start + cardsPerPage));
           setError('');
         } else {
           setError('Unexpected response format');
@@ -75,13 +75,12 @@ const CardList = () => {
   };
 
   const fetchFilterOptions = () => {
-    fetch('http://localhost:5001/cards/filter-options')
-      .then(response => response.json())
-      .then(data => {
+    api.get('/cards/filter-options')
+      .then(response => {
         setFilterOptions({
-          artists: data.artists || [],
-          groups: data.groups || [],
-          albums: data.albums || []
+          artists: response.data.artists || [],
+          groups: response.data.groups || [],
+          albums: response.data.albums || []
         });
       })
       .catch(error => {

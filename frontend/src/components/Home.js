@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Slider from 'react-slick';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import './Home.css';
@@ -11,14 +12,12 @@ const Home = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('http://localhost:5001/cards/list?sort_by=recommended')
-      .then(response => response.json())
-      .then(data => setRecommendations(data))
+    api.get('/cards/list?sort_by=recommended')
+      .then(response => setRecommendations(response.data))
       .catch(error => console.error('Error fetching recommendations:', error));
 
-    fetch('http://localhost:5001/cards/list?sort_by=latest')
-      .then(response => response.json())
-      .then(data => setLatest(data))
+    api.get('/cards/list?sort_by=latest')
+      .then(response => setLatest(response.data))
       .catch(error => console.error('Error fetching latest cards:', error));
   }, []);
 

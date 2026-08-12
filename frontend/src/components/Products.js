@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import api from '../services/api';
 import './Products.css';
 
 const Products = () => {
@@ -14,19 +15,10 @@ const Products = () => {
 
   const fetchProducts = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('http://localhost:5001/cards/list', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
-      const data = await response.json();
-      setProducts(data);
+      const response = await api.get('/cards/list');
+      setProducts(response.data);
     } catch (error) {
-      setError(error.message);
+      setError('Failed to fetch products');
     } finally {
       setLoading(false);
     }
@@ -39,30 +31,20 @@ const Products = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const method = isEditing ? 'PUT' : 'POST';
-    const url = isEditing ? `http://localhost:5001/cards/${form.id}` : 'http://localhost:5001/cards/';
-    const token = localStorage.getItem('authToken');
+    const productData = { ...form, price: parseFloat(form.price) }; // Ensure price is a number
 
     try {
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ...form, price: parseFloat(form.price) }), // Ensure price is a number
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save product');
+      if (isEditing) {
+        await api.put(`/cards/${form.id}`, productData);
+      } else {
+        await api.post('/cards/', productData);
       }
 
       setForm({ id: null, card_name: '', artist: '', group: '', album: '', price: '', description: '', image_url: '' });
       setIsEditing(false);
       fetchProducts(); // Refresh products list
     } catch (error) {
-      setError(error.message);
+      setError(error.response?.data?.message || 'Failed to save product');
     }
   };
 
@@ -72,21 +54,11 @@ const Products = () => {
   };
 
   const deleteProduct = async (productId) => {
-    const token = localStorage.getItem('authToken');
     try {
-      const response = await fetch(`http://localhost:5001/cards/${productId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete product');
-      }
+      await api.delete(`/cards/${productId}`);
       setProducts(products.filter(product => product.id !== productId));
     } catch (error) {
-      setError(error.message);
+      setError('Failed to delete product');
     }
   };
 

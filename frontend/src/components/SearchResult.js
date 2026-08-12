@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import './SearchResults.css';
 
 const SearchResults = () => {
@@ -13,19 +14,18 @@ const SearchResults = () => {
     const query = new URLSearchParams(location.search).get('q');
     if (query) {
       fetchSearchResults(query);
+    } else {
+      setResults([]);
+      setLoading(false);
     }
   }, [location.search]);
 
   const fetchSearchResults = async (query) => {
     try {
-      const response = await fetch(`http://localhost:5001/cards/search?q=${encodeURIComponent(query)}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch search results');
-      }
-      const data = await response.json();
-      setResults(data);
+      const response = await api.get(`/cards/search?q=${encodeURIComponent(query)}`);
+      setResults(response.data);
     } catch (error) {
-      setError(error.message);
+      setError('Failed to fetch search results');
     } finally {
       setLoading(false);
     }

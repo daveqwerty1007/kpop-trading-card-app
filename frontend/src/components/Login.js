@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from './AuthContext';
+import api from '../services/api';
 import './Login.css';
 
 const Login = () => {
@@ -9,6 +11,7 @@ const Login = () => {
   const [name, setName] = useState(''); // For registration
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   const storeToken = (token) => {
     localStorage.setItem('authToken', token);
@@ -19,27 +22,13 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5001/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-      console.log('User Login response:', data);
-
-      if (response.ok) {
-        storeToken(data.access_token);
-        navigate('/user_panel'); 
-      } else {
-        setError(data.message || 'Unknown error occurred');
-      }
+      const response = await api.post('/users/login', { email, password });
+      storeToken(response.data.access_token);
+      refreshUser();
+      navigate('/user_panel');
     } catch (err) {
       console.error('User Login error:', err);
-      setError('An error occurred. Please try again.');
+      setError(err.response?.data?.message || 'An error occurred. Please try again.');
     }
   };
 
@@ -48,27 +37,12 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5001/admin/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-      console.log('Admin Login response:', data);
-
-      if (response.ok) {
-        storeToken(data.access_token);
-        navigate('/admin_panel'); // Adjust this path as necessary
-      } else {
-        setError(data.message || 'Unknown error occurred');
-      }
+      const response = await api.post('/admin/login', { email, password });
+      storeToken(response.data.access_token);
+      navigate('/admin_panel'); // Adjust this path as necessary
     } catch (err) {
       console.error('Admin Login error:', err);
-      setError('An error occurred. Please try again.');
+      setError(err.response?.data?.message || 'An error occurred. Please try again.');
     }
   };
 
@@ -83,27 +57,15 @@ const Login = () => {
     }
 
     try {
-        const response = await fetch('http://localhost:5001/users/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ name, email, password }),
-            credentials: 'include'
-        });
-
-        const data = await response.json();
-        console.log('Registration response:', data);
-        storeToken(data.access_token);
-        if (response.ok) {
-            // Navigate to user panel or login
-            navigate('/user_panel'); // Adjust this path as necessary
-        } else {
-            setError(data.errors ? data.errors.map(err => err.msg).join(', ') : 'Unknown error occurred');
-        }
+        const response = await api.post('/users/register', { name, email, password });
+        storeToken(response.data.access_token);
+        refreshUser();
+        // Navigate to user panel or login
+        navigate('/user_panel'); // Adjust this path as necessary
     } catch (err) {
         console.error('Registration error:', err);
-        setError('An error occurred. Please try again.');
+        const errors = err.response?.data?.errors;
+        setError(errors ? errors.map(e => e.msg).join(', ') : 'An error occurred. Please try again.');
     }
   };
 

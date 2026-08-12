@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import api from '../services/api';
 import './Orders.css';
 
 const Orders = () => {
@@ -12,36 +13,22 @@ const Orders = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch('http://localhost:5001/orders/list');
-      if (!response.ok) {
-        throw new Error('Failed to fetch orders');
-      }
-      const data = await response.json();
-      setOrders(data);
+      const response = await api.get('/orders/list');
+      setOrders(response.data);
     } catch (error) {
-      setError(error.message);
+      setError('Failed to fetch orders');
     } finally {
       setLoading(false);
     }
   };
 
   const deleteOrder = async (orderId) => {
-   
     try {
-      const response = await fetch(`http://localhost:5001/orders/${orderId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization':`Bearer `+localStorage.getItem('authToken')
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete order');
-      }
+      await api.delete(`/orders/${orderId}`);
       // Refresh orders list after successful deletion
       setOrders(orders.filter(order => order.id !== orderId));
     } catch (error) {
-      setError(error.message);
+      setError('Failed to delete order');
     }
   };
 
