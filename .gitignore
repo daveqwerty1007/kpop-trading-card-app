@@ -2,3 +2,4 @@
 .DS_Store
 *.pem
 backend/app/*.db
+node_modules/

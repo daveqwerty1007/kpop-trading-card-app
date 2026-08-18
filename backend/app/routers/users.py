@@ -7,7 +7,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from pydantic import ValidationError
 from ..crud import create_user, get_all_users, get_user_by_id, get_user_filter_options, get_user_orders, search_users, update_user, delete_user
 from ..models import User
-from ..schemas import UserSchema,UserRegisterSchema
+from ..schemas import UserPublicSchema, UserRegisterSchema, SettingsSchema
 from ..database import db
 from ..utils import current_profile
 import logging
@@ -27,7 +27,7 @@ def register():
         
         new_user_data = user_schema.dict()
         new_user = create_user(new_user_data)  # The create_user function will handle adding and committing
-        access_token = create_access_token(identity=new_user.id)
+        access_token = create_access_token(identity=new_user.id, additional_claims={'role': 'user'})
         return jsonify({"message": "Login successful", "access_token": access_token, "user_id": new_user.id}), 200
 
     except ValidationError as e:
@@ -46,7 +46,7 @@ def update_name_and_email():
         update_user(data.get('id'), data)
         user = User.query.get(data.get('id'))
         if user:
-            user_data = UserSchema.from_orm(user).dict()
+            user_data = UserPublicSchema.from_orm(user).dict()
             return jsonify(user_data), 200
         return jsonify({"message": "User not found"}), 404
     except ValidationError as e:
@@ -58,7 +58,7 @@ def login():
     data = request.json
     user = User.query.filter_by(email=data.get('email')).first()
     if user and check_password_hash(user.password, data.get('password')):
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=user.id, additional_claims={'role': 'user'})
         return jsonify({"message": "Login successful", "access_token": access_token, "user_id": user.id}), 200
     return jsonify({"message": "Invalid credentials"}), 401
 
@@ -85,7 +85,7 @@ def detail(user_id):
         user = get_user_by_id(user_id)
         if user is None:
             return jsonify({"message": "User not found"}), 404
-        return jsonify(UserSchema.from_orm(user).dict()), 200
+        return jsonify(UserPublicSchema.from_orm(user).dict()), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -108,7 +108,7 @@ def list_users():
 
     try:
         users = get_all_users(name=name, email=email, sort_by=sort_by)
-        return jsonify([UserSchema.from_orm(user).dict() for user in users])
+        return jsonify([UserPublicSchema.from_orm(user).dict() for user in users])
     except ValidationError as e:
         return jsonify(e.errors()), 400
 
@@ -128,7 +128,7 @@ def search_users_route():
 
     try:
         results = search_users(query)
-        return jsonify([UserSchema.from_orm(user).dict() for user in results])
+        return jsonify([UserPublicSchema.from_orm(user).dict() for user in results])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -149,3 +149,25 @@ def current_user_orders():
         return jsonify(orders), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@bp.route('/settings', methods=['GET'])
+@jwt_required()
+def get_settings():
+    user = User.query.get(get_jwt_identity())
+    if user is None:
+        return jsonify({"message": "User not found"}), 404
+    return jsonify({"emailMarketing": user.email_marketing}), 200
+
+@bp.route('/settings', methods=['PUT'])
+@jwt_required()
+def update_settings():
+    try:
+        settings = SettingsSchema(**(request.json or {}))
+    except ValidationError as e:
+        return jsonify({"errors": e.errors()}), 400
+    user = User.query.get(get_jwt_identity())
+    if user is None:
+        return jsonify({"message": "User not found"}), 404
+    user.email_marketing = settings.emailMarketing
+    db.session.commit()
+    return jsonify({"emailMarketing": user.email_marketing}), 200

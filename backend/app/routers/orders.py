@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from pydantic import ValidationError
 from datetime import datetime
 
-from ..utils import admin_required, is_admin_identity
+from ..utils import admin_required, owns_or_admin
 from ..crud import (
     create_order, get_all_orders, get_order_by_id, get_order_filter_options, search_orders, update_order, delete_order,
     get_cart_items, clear_cart, create_payment, calculate_cart_total
@@ -60,7 +60,7 @@ def detail(order_id):
         if order is None:
             return jsonify({'message': 'Order not found'}), 404
         identity = get_jwt_identity()
-        if order.user_id != identity and not is_admin_identity(identity):
+        if not owns_or_admin(order.user_id, identity):
             return jsonify({'message': 'Forbidden'}), 403
         return jsonify(OrderSchema.from_orm(order).dict()), 200
     except ValidationError as e:

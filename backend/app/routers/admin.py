@@ -3,8 +3,8 @@ from flask_jwt_extended import create_access_token, jwt_required
 from werkzeug.security import check_password_hash, generate_password_hash
 from pydantic import ValidationError
 from ..crud import create_user, detect_fraudulent_orders, get_old_inventory, get_order_count, get_product_count, get_restock_list, get_sales_data_last_week, get_top_spending_users, get_total_sales, get_user_count, update_user, delete_user
-from ..models import Admin
-from ..schemas import UserSchema, AdminSchema,UserUpdateSchema
+from ..models import User
+from ..schemas import UserSchema, UserUpdateSchema, UserRegisterSchema
 from ..utils import admin_required, current_profile
 import logging
 
@@ -14,7 +14,7 @@ bp = Blueprint('admin', __name__, url_prefix='/admin')
 @bp.route('/profile', methods=['GET'])
 @jwt_required()
 def profile():
-    admin_data = current_profile(Admin)
+    admin_data = current_profile(User)
     if admin_data:
         return jsonify(admin_data), 200
     return jsonify({"message": "User not found"}), 404
@@ -24,10 +24,10 @@ def admin_login():
         data = request.json
         email = data.get('email')
         password = data.get('password')
-        
-        admin = Admin.query.filter_by(email=email).first()
+
+        admin = User.query.filter_by(email=email, role='admin').first()
         if admin and check_password_hash(admin.password, password):
-            access_token = create_access_token(identity=admin.id)
+            access_token = create_access_token(identity=admin.id, additional_claims={'role': 'admin'})
             logging.info(f"Admin {admin.email} logged in.")
             return jsonify({"message": "Admin login successful", "access_token": access_token, "admin_id": admin.id}), 200
         else:
@@ -48,7 +48,7 @@ def create_user_route():
     try:
         data = request.json
         data['password'] = generate_password_hash(data['password'], method='pbkdf2:sha256')
-        user_schema = UserSchema(**data)
+        user_schema = UserRegisterSchema(**data)
         new_user = create_user(user_schema.dict())
         return jsonify({"message": f"User {new_user.name} created successfully.", "user_id": new_user.id}), 201
     except ValidationError as e:

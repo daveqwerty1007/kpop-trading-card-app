@@ -24,6 +24,13 @@ INSERT INTO `User` (`name`, `email`, `password`) VALUES
 ('Steve Harris', 'steve@example.com', 'password116'),
 ('Tina Martin', 'tina@example.com', 'password117');
 
+-- Insert Admins
+INSERT INTO `User` (`name`, `email`, `password`, `role`) VALUES
+('Admin User', 'admin@example.com', 'adminpass', 'admin'),
+('Super Admin', 'superadmin@example.com', 'superpass', 'admin'),
+('Manager', 'manager@example.com', 'managerpass', 'admin'),
+('Support', 'support@example.com', 'supportpass', 'admin');
+
 -- Insert Cards
 INSERT INTO `Card` (`card_name`, `artist`, `group`, `album`, `price`, `description`, `image_url`) VALUES
 ('Blue Rose', 'Lisa', 'BlackPink', 'The Album', 10.99, 'A rare card featuring Lisa from BlackPink.', 'url_to_image1'),
@@ -95,13 +102,6 @@ INSERT INTO `Inventory` (`card_id`, `quantity_available`) VALUES
 (8, 70),
 (9, 35),
 (10, 45);
-
--- Insert Admins
-INSERT INTO `Admin` (`name`, `email`, `password`) VALUES
-('Admin User', 'admin@example.com', 'adminpass'),
-('Super Admin', 'superadmin@example.com', 'superpass'),
-('Manager', 'manager@example.com', 'managerpass'),
-('Support', 'support@example.com', 'supportpass');
 
 -- Insert CartItems
 INSERT INTO `CartItem` (`user_id`, `card_id`, `quantity`) VALUES

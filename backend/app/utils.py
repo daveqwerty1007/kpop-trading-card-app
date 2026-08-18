@@ -1,23 +1,34 @@
 from functools import wraps
 from flask import jsonify
-from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
-from .models import Admin
+from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
 
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        verify_jwt_in_request() 
-        user_id = get_jwt_identity()
-        user = Admin.query.get(user_id)
-        
-        if not user or not getattr(user, 'is_admin', False):
+        verify_jwt_in_request()
+        if get_jwt().get('role') != 'admin':
             return jsonify({"message": "Admins only: Access denied"}), 403
-        
+
         return f(*args, **kwargs)
     return decorated_function
 
-def is_admin_identity(identity):
-    return Admin.query.get(identity) is not None
+def is_current_admin():
+    """Whether the current request's JWT belongs to an admin.
+
+    Reads the 'role' claim set at login time rather than re-deriving role
+    from the raw identity, so this stays correct however roles end up
+    being modeled.
+    """
+    return get_jwt().get('role') == 'admin'
+
+def owns_or_admin(owner_id, identity):
+    """Whether the current caller either owns a resource or is an admin.
+
+    owner_id may be None (e.g. resource's parent record is missing) —
+    admins still pass in that case, matching each call site's original
+    "admins always bypass ownership" behavior.
+    """
+    return is_current_admin() or owner_id == identity
 
 def current_profile(model):
     """Return {id, email, name} for the model row matching the current JWT identity, or None."""

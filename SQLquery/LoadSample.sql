@@ -6,6 +6,10 @@ INSERT INTO `User` (`name`, `email`, `password`) VALUES
 ('David Brown', 'david@example.com', 'password101'),
 ('Eva Green', 'eva@example.com', 'password102');
 
+INSERT INTO `User` (`name`, `email`, `password`, `role`) VALUES
+('Admin User', 'admin@example.com', 'adminpass', 'admin'),
+('Super Admin', 'superadmin@example.com', 'superpass', 'admin');
+
 INSERT INTO `Card` (`card_name`, `artist`, `group`, `album`, `price`, `description`, `image_url`) VALUES
 ('Blue Rose', 'Lisa', 'BlackPink', 'The Album', 10.99, 'A rare card featuring Lisa from BlackPink.', 'url_to_image1'),
 ('Red Sun', 'Jennie', 'BlackPink', 'The Album', 12.99, 'A rare card featuring Jennie from BlackPink.', 'url_to_image2'),
@@ -33,10 +37,6 @@ INSERT INTO `Inventory` (`card_id`, `quantity_available`) VALUES
 (3, 20),
 (4, 15),
 (5, 25);
-
-INSERT INTO `Admin` (`name`, `email`, `password`) VALUES
-('Admin User', 'admin@example.com', 'adminpass'),
-('Super Admin', 'superadmin@example.com', 'superpass');
 
 INSERT INTO `CartItem` (`user_id`, `card_id`, `quantity`) VALUES
 (1, 1, 2),

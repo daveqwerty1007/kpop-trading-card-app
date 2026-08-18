@@ -7,10 +7,12 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
-    
+    role = db.Column(db.String(20), nullable=False, default='user')
+    email_marketing = db.Column(db.Boolean, nullable=False, default=False)
+
     @property
     def is_admin(self):
-        return False
+        return self.role == 'admin'
 
     @property
     def is_active(self):
@@ -18,14 +20,14 @@ class User(db.Model, UserMixin):
 
     @property
     def is_authenticated(self):
-        return True 
+        return True
 
     @property
     def is_anonymous(self):
         return False
-    
+
     def user_type(self):
-        return 'user'
+        return self.role
 
     def get_id(self):
         return f"user-{self.id}"
@@ -70,34 +72,6 @@ class Inventory(db.Model):
     quantity_available = db.Column(db.Integer, nullable=False)
 
     card = db.relationship('Card', backref=db.backref('inventory_items', lazy=True))
-
-class Admin(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(150), nullable=False)
-    email = db.Column(db.String(150), unique=True, nullable=False)
-    password = db.Column(db.String(150), nullable=False)
-
-    @property
-    def is_admin(self):
-        return True
-
-    @property
-    def is_active(self):
-        return True
-
-    @property
-    def is_authenticated(self):
-        return True
-
-    @property
-    def is_anonymous(self):
-        return False
-    
-    def user_type(self):
-        return 'admin'
-    
-    def get_id(self):
-        return f"admin-{self.id}"
 
 class CartItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)

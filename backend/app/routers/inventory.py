@@ -1,11 +1,13 @@
 from flask import Blueprint, request, jsonify
 from ..crud import create_inventory, get_inventory_by_id, update_inventory, delete_inventory, get_all_inventory
 from ..schemas import InventorySchema
+from ..utils import admin_required
 from pydantic import ValidationError
 
 bp = Blueprint('inventory', __name__, url_prefix='/inventory')
 
 @bp.route('/', methods=['POST'])
+@admin_required
 def create():
     try:
         inventory_data = request.json
@@ -35,6 +37,7 @@ def get(inventory_id):
         return jsonify({'message': str(e)}), 500
 
 @bp.route('/<int:inventory_id>', methods=['PUT'])
+@admin_required
 def update(inventory_id):
     try:
         inventory_data = request.json
@@ -46,6 +49,7 @@ def update(inventory_id):
         return jsonify({'message': str(e)}), 500
 
 @bp.route('/<int:inventory_id>', methods=['DELETE'])
+@admin_required
 def delete(inventory_id):
     try:
         delete_inventory(inventory_id)

@@ -7,7 +7,7 @@ from flask_cors import CORS
 from .database import init_db, db
 from .routers import users, cards, orders, payments, inventory, admin, order_items, cart_items
 from flask_login import LoginManager, current_user
-from .models import User, Admin
+from .models import User
 from flask_jwt_extended import JWTManager, create_access_token
 
 
@@ -35,8 +35,10 @@ def create_app():
     # Initialize the database
     init_db(app)
 
-    app.secret_key = 'myapp'
-    
+    # Falls back to a fixed dev key so local/test runs don't need setup, but
+    # any real deployment should set SECRET_KEY explicitly.
+    app.secret_key = os.environ.get('SECRET_KEY', 'dev-only-insecure-secret-key')
+
     # Initialize Flask-Login
     login_manager = LoginManager()
     login_manager.init_app(app)
@@ -45,8 +47,6 @@ def create_app():
     def load_user(user_id):
         if user_id.startswith('user-'):
             return User.query.get(int(user_id.split('-')[1]))
-        elif user_id.startswith('admin-'):
-            return Admin.query.get(int(user_id.split('-')[1]))
         return None
         
     # Register blueprints (routers)

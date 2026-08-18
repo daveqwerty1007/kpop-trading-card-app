@@ -39,6 +39,7 @@ const Login = () => {
     try {
       const response = await api.post('/admin/login', { email, password });
       storeToken(response.data.access_token);
+      refreshUser();
       navigate('/admin_panel'); // Adjust this path as necessary
     } catch (err) {
       console.error('Admin Login error:', err);
@@ -67,11 +68,6 @@ const Login = () => {
         const errors = err.response?.data?.errors;
         setError(errors ? errors.map(e => e.msg).join(', ') : 'An error occurred. Please try again.');
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    navigate('/login'); // Adjust the path as necessary
   };
 
   const renderForm = () => {

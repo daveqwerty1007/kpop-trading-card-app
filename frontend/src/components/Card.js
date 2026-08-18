@@ -96,11 +96,13 @@ const CardList = () => {
         : prevFilters[name].filter(v => v !== value);
       return { ...prevFilters, [name]: values };
     });
+    setCurrentPage(1);
   };
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setFilters(prevFilters => ({ ...prevFilters, [name]: value }));
+    setCurrentPage(1);
   };
 
   const handleSortChange = (event) => {
@@ -108,6 +110,7 @@ const CardList = () => {
       ...prevFilters,
       sort_by: event.target.value
     }));
+    setCurrentPage(1);
   };
 
   const handleClearFilters = () => {

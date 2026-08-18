@@ -11,6 +11,15 @@ class UserSchema(BaseModel):
     class Config:
         orm_mode = True
 
+class UserPublicSchema(BaseModel):
+    id: int
+    name: str
+    email: str
+    role: str
+
+    class Config:
+        orm_mode = True
+
 class UserUpdateSchema(BaseModel):
     id: int
     name: str
@@ -70,6 +79,21 @@ class PaymentSchema(BaseModel):
     class Config:
         orm_mode = True
 
+class PaymentCreateSchema(BaseModel):
+    order_id: int
+    payment_date: datetime
+    payment_method: str
+    payment_status: str
+
+    class Config:
+        orm_mode = True
+
+class PaymentUpdateSchema(BaseModel):
+    order_id: Optional[int] = None
+    payment_date: Optional[datetime] = None
+    payment_method: Optional[str] = None
+    payment_status: Optional[str] = None
+
 class InventorySchema(BaseModel):
     id: int
     card_id: int
@@ -78,15 +102,8 @@ class InventorySchema(BaseModel):
     class Config:
         orm_mode = True
 
-class AdminSchema(BaseModel):
-    id: int
-    name: str
-    email: str
-    password: str
-
-    class Config:
-        orm_mode = True
-        from_attributes = True
+class SettingsSchema(BaseModel):
+    emailMarketing: bool
 
 class CartItemBase(BaseModel):
     user_id: int

@@ -4,7 +4,9 @@ CREATE TABLE `User` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `name` VARCHAR(150) NOT NULL,
     `email` VARCHAR(150) UNIQUE NOT NULL,
-    `password` VARCHAR(150) NOT NULL
+    `password` VARCHAR(150) NOT NULL,
+    `role` VARCHAR(20) NOT NULL DEFAULT 'user',
+    `email_marketing` BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE `Card` (
@@ -40,13 +42,6 @@ CREATE TABLE `Inventory` (
     `card_id` INT NOT NULL,
     `quantity_available` INT NOT NULL,
     FOREIGN KEY (`card_id`) REFERENCES Card(`id`)
-);
-
-CREATE TABLE `Admin` (
-    `id` INT PRIMARY KEY AUTO_INCREMENT,
-    `name` VARCHAR(150),
-    `email` VARCHAR(150) UNIQUE,
-    `password` VARCHAR(150)
 );
 
 CREATE TABLE `CartItem` (

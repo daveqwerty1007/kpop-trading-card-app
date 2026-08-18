@@ -10,7 +10,7 @@ def read_image_urls(filename='image_urls.txt'):
         return [line.strip() for line in file]
     
 data = {
-    "users": [],
+    "users": [],  # includes both regular users and admin accounts (role field)
     "cards": [],
     "orders": [],
     "payments": [],
@@ -26,10 +26,19 @@ def generate_users(num_users=10):
             "id": _ + 1,
             "name": fake.name(),
             "email": fake.email(),
-            "password": fake.password()
+            "password": fake.password(),
+            "role": "user"
         }
         users.append(user)
     return users
+
+def generate_admin_users(start_id):
+    """A small, fixed set of admin accounts, given ids that continue the
+    User table's id sequence (User and Admin now share one table)."""
+    return [
+        {"id": start_id, "name": "Admin One", "email": "adminone@example.com", "password": "adminpassword123", "role": "admin"},
+        {"id": start_id + 1, "name": "Admin Two", "email": "admintwo@example.com", "password": "adminpassword456", "role": "admin"},
+    ]
 
 def generate_cards(num_cards=20, image_urls=None):
     cards = []
@@ -115,7 +124,8 @@ def generate_order_items(orders, cards):
 
 def main():
     users = generate_users(num_users=25)
-    image_urls = read_image_urls() 
+    admin_users = generate_admin_users(start_id=len(users) + 1)
+    image_urls = read_image_urls()
     cards = generate_cards(num_cards=49, image_urls=image_urls)
     orders = generate_orders(users, num_orders=100)
     payments = generate_payments(orders)
@@ -123,7 +133,7 @@ def main():
     cart_items = generate_cart_items(users, cards)
     order_items = generate_order_items(orders, cards)
 
-    data["users"] = users
+    data["users"] = users + admin_users
     data["cards"] = cards
     data["orders"] = orders
     data["payments"] = payments

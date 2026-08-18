@@ -2,6 +2,7 @@ import os
 from sqlite3 import IntegrityError
 import sys
 import json
+from datetime import datetime
 from flask import Flask
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -11,7 +12,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.append(backend_dir)
 
-from app.models import User, Card, Order, Payment, Inventory, CartItem, OrderItem, Admin
+from app.models import User, Card, Order, Payment, Inventory, CartItem, OrderItem
 from app.database import db, init_db
 
 app = Flask(__name__)
@@ -37,7 +38,7 @@ def load_data(filename):
     return data
 
 def insert_data(session, data):
-    # Insert Users
+    # Insert Users (includes admin accounts, distinguished by role)
     for user_data in data['users']:
         if not session.query(User).filter_by(id=user_data['id']).first():
             hashed_password = generate_password_hash(user_data['password'], method='pbkdf2:sha256')
@@ -45,22 +46,10 @@ def insert_data(session, data):
                 id=user_data['id'],
                 name=user_data['name'],
                 email=user_data['email'],
-                password=hashed_password
+                password=hashed_password,
+                role=user_data.get('role', 'user')
             )
             session.add(user)
-    session.commit()
-
-    # Insert Admins
-    for admin_data in data['admins']:
-        if not session.query(Admin).filter_by(id=admin_data['id']).first():
-            hashed_password = generate_password_hash(admin_data['password'], method='pbkdf2:sha256')
-            admin = Admin(
-                id=admin_data['id'],
-                name=admin_data['name'],
-                email=admin_data['email'],
-                password=hashed_password
-            )
-            session.add(admin)
     session.commit()
 
     # Insert Cards
@@ -85,7 +74,7 @@ def insert_data(session, data):
             order = Order(
                 id=order_data['id'],
                 user_id=order_data['user_id'],
-                order_date=order_data['order_date'],
+                order_date=datetime.fromisoformat(order_data['order_date']),
                 total_amount=order_data['total_amount']
             )
             session.add(order)
@@ -97,7 +86,7 @@ def insert_data(session, data):
             payment = Payment(
                 id=payment_data['id'],
                 order_id=payment_data['order_id'],
-                payment_date=payment_data['payment_date'],
+                payment_date=datetime.fromisoformat(payment_data['payment_date']),
                 payment_method=payment_data['payment_method'],
                 payment_status=payment_data['payment_status']
             )

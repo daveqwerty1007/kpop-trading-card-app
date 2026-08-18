@@ -1,4 +1,4 @@
-USE kpop_trading;
+USE kpop_trading_card;
 SELECT 
     c.card_name,
     c.artist,

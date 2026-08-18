@@ -1,87 +1,92 @@
 import time
+from werkzeug.security import generate_password_hash
+from app.database import db
+from app.models import User
 
-def test_create_order(test_client, init_database):
-    # Ensure a user exists first
-    user_response = test_client.post('/users/', json={
-        'name': 'John Doe',
-        'email': 'john.doe@example.com',
-        'password': 'password123'
-    })
-    assert user_response.status_code == 201
-    user_id = user_response.get_json()['user_id']
-    
-    response = test_client.post('/orders/', json={
-        'user_id': user_id,
-        'order_date': '2022-01-01T00:00:00Z',
-        'total_amount': 100.0
-    })
-    assert response.status_code == 201
 
-import time
-
-def test_get_order(test_client, init_database):
-    # Ensure a user and order exist first
-    unique_email = f'john.doe{time.time()}@example.com'
-    user_response = test_client.post('/users/', json={
-        'name': 'John Doe',
+def _user_headers(test_client):
+    unique_email = f'order.user.{time.time()}@example.com'
+    test_client.post('/users/', json={
+        'name': 'Order Tester',
         'email': unique_email,
         'password': 'password123'
     })
-    assert user_response.status_code == 201
-    user_id = user_response.get_json()['user_id']
+    login_resp = test_client.post('/users/login', json={'email': unique_email, 'password': 'password123'})
+    token = login_resp.get_json()['access_token']
+    return {'Authorization': f'Bearer {token}'}
 
-    order_response = test_client.post('/orders/', json={
-        'user_id': user_id,
-        'order_date': '2022-01-01T00:00:00Z',
-        'total_amount': 100.0
-    })
-    assert order_response.status_code == 201
-    order_id = order_response.get_json()['id']
 
-    response = test_client.get(f'/orders/{order_id}')
+def _admin_headers(test_client):
+    unique_email = f'order.admin.{time.time()}@example.com'
+    admin = User(
+        name='Order Admin',
+        email=unique_email,
+        password=generate_password_hash('adminpass', method='pbkdf2:sha256'),
+        role='admin'
+    )
+    db.session.add(admin)
+    db.session.commit()
+    login_resp = test_client.post('/admin/login', json={'email': unique_email, 'password': 'adminpass'})
+    token = login_resp.get_json()['access_token']
+    return {'Authorization': f'Bearer {token}'}
+
+
+def _checkout_order(test_client):
+    """There is no direct order-creation endpoint — orders only come from
+    the cart/checkout flow. Returns (order_id, owner_headers)."""
+    headers = _user_headers(test_client)
+    card_resp = test_client.post('/cards/', json={
+        'card_name': 'Order Test Card',
+        'artist': 'Test Artist',
+        'group': 'Test Group',
+        'album': 'Test Album',
+        'price': 25.0,
+        'description': 'This is a test card.',
+        'image_url': 'http://example.com/test.jpg'
+    }, headers=headers)
+    card_id = card_resp.get_json()['id']
+
+    test_client.post('/cart_items/', json={'card_id': card_id, 'quantity': 2}, headers=headers)
+
+    checkout_resp = test_client.post('/orders/checkout', json={'payment_method': 'credit_card'}, headers=headers)
+    assert checkout_resp.status_code == 200
+    return checkout_resp.get_json()['order_id'], headers
+
+
+def test_checkout_creates_order(test_client):
+    order_id, headers = _checkout_order(test_client)
+    assert order_id is not None
+
+    response = test_client.get(f'/orders/{order_id}', headers=headers)
+    assert response.status_code == 200
+    assert response.get_json()['total_amount'] == 50.0
+
+def test_get_order(test_client):
+    order_id, headers = _checkout_order(test_client)
+
+    response = test_client.get(f'/orders/{order_id}', headers=headers)
     assert response.status_code == 200
 
-def test_update_order(test_client, init_database):
-    unique_email = f'john.doe{time.time()}@example.com'
-    user_response = test_client.post('/users/', json={
-        'name': 'John Doe',
-        'email': unique_email,
-        'password': 'password123'
-    })
-    assert user_response.status_code == 201
-    user_id = user_response.get_json()['user_id']
+def test_get_order_forbidden_for_other_user(test_client):
+    order_id, _owner_headers = _checkout_order(test_client)
+    other_user_headers = _user_headers(test_client)
 
-    order_response = test_client.post('/orders/', json={
-        'user_id': user_id,
-        'order_date': '2022-01-01T00:00:00Z',
-        'total_amount': 100.0
-    })
-    assert order_response.status_code == 201
-    order_id = order_response.get_json()['id']
+    response = test_client.get(f'/orders/{order_id}', headers=other_user_headers)
+    assert response.status_code == 403
+
+def test_update_order(test_client):
+    order_id, _owner_headers = _checkout_order(test_client)
+    admin_headers = _admin_headers(test_client)
 
     update_response = test_client.put(f'/orders/{order_id}', json={
         'total_amount': 150.0
-    })
+    }, headers=admin_headers)
     assert update_response.status_code == 200
     assert update_response.get_json()['total_amount'] == 150.0
 
-def test_delete_order(test_client, init_database):
-    unique_email = f'john.doe{time.time()}@example.com'
-    user_response = test_client.post('/users/', json={
-        'name': 'John Doe',
-        'email': unique_email,
-        'password': 'password123'
-    })
-    assert user_response.status_code == 201
-    user_id = user_response.get_json()['user_id']
+def test_delete_order(test_client):
+    order_id, _owner_headers = _checkout_order(test_client)
+    admin_headers = _admin_headers(test_client)
 
-    order_response = test_client.post('/orders/', json={
-        'user_id': user_id,
-        'order_date': '2022-01-01T00:00:00Z',
-        'total_amount': 100.0
-    })
-    assert order_response.status_code == 201
-    order_id = order_response.get_json()['id']
-
-    delete_response = test_client.delete(f'/orders/{order_id}')
+    delete_response = test_client.delete(f'/orders/{order_id}', headers=admin_headers)
     assert delete_response.status_code == 204

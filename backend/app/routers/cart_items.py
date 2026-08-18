@@ -32,7 +32,7 @@ def update(cart_item_id):
         return jsonify({'message': 'Cart item not found'}), 404
     if cart_item.user_id != get_jwt_identity():
         return jsonify({'message': 'Forbidden'}), 403
-    cart_item = update_cart_item(cart_item_id, request.json)
+    cart_item = update_cart_item(cart_item_id, {'quantity': request.json.get('quantity')})
     return jsonify(CartItemSchema.from_orm(cart_item).dict())
 
 @bp.route('/<int:cart_item_id>', methods=['DELETE'])

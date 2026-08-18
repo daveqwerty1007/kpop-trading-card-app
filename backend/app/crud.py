@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import and_, func, or_
-from .models import db, User, Card, Order, Payment, Inventory, Admin, CartItem, OrderItem
+from .models import db, User, Card, Order, Payment, Inventory, CartItem, OrderItem
 from . import database
 from werkzeug.security import generate_password_hash
 from sqlalchemy.orm import joinedload
@@ -284,31 +284,6 @@ def delete_inventory(inventory_id):
 def get_all_inventory():
     return Inventory.query.all()
 
-# Admin CRUD operations
-def create_admin(admin_data):
-    admin = Admin(**admin_data)
-    db.session.add(admin)
-    db.session.commit()
-    return admin
-
-def get_admin_by_id(admin_id):
-    return db.session.get(Admin, admin_id)
-
-def update_admin(admin_id, admin_data):
-    admin = db.session.get(Admin, admin_id)
-    if admin:
-        for key, value in admin_data.items():
-            setattr(admin, key, value)
-        db.session.commit()
-    return admin
-
-def delete_admin(admin_id):
-    admin = db.session.get(Admin, admin_id)
-    if admin:
-        db.session.delete(admin)
-        db.session.commit()
-    return admin
-
 def get_user_count():
     return User.query.count()
 
@@ -319,8 +294,8 @@ def get_product_count():
     return Card.query.count()
 
 def get_total_sales():
-    total_sales = round(db.session.query(func.sum(Order.total_amount)).scalar(),2)
-    return total_sales or 0  # Return 0 if total_sales is None
+    total_sales = db.session.query(func.sum(Order.total_amount)).scalar()
+    return round(total_sales, 2) if total_sales is not None else 0
 
 def get_sales_data_last_week():
     one_week_ago = datetime.utcnow() - timedelta(days=30)
