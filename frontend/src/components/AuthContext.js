@@ -4,24 +4,19 @@ import api from '../services/api';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
+  // Derived rather than stored separately so it can never disagree with
+  // `user` — a separate flag let Header render "logged in" with user=null.
+  const isLoggedIn = user !== null;
 
   const refreshUser = useCallback(() => {
     if (!localStorage.getItem('authToken')) {
-      setIsLoggedIn(false);
       setUser(null);
       return;
     }
     api.get('/users/current')
-      .then(response => {
-        setIsLoggedIn(true);
-        setUser(response.data);
-      })
-      .catch(() => {
-        setIsLoggedIn(false);
-        setUser(null);
-      });
+      .then(response => setUser(response.data))
+      .catch(() => setUser(null));
   }, []);
 
   useEffect(() => {
@@ -41,7 +36,6 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('authToken');
-    setIsLoggedIn(false);
     setUser(null);
   };
 
