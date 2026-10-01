@@ -1,8 +1,8 @@
 import os
-from sqlite3 import IntegrityError
 import sys
 import json
 from datetime import datetime
+from sqlalchemy.exc import IntegrityError
 from flask import Flask
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -37,7 +37,18 @@ def load_data(filename):
         data = json.load(file)
     return data
 
+def date_offset(data):
+    """How far to move the sample dates so the newest order is from now.
+
+    data.json was generated once, so without this its orders drift out of
+    the dashboard's 30-day and the recommendations' 90-day windows.
+    """
+    newest = max(datetime.fromisoformat(order['order_date']) for order in data['orders'])
+    return datetime.utcnow() - newest
+
 def insert_data(session, data):
+    offset = date_offset(data)
+
     # Insert Users (includes admin accounts, distinguished by role)
     for user_data in data['users']:
         if not session.query(User).filter_by(id=user_data['id']).first():
@@ -74,7 +85,7 @@ def insert_data(session, data):
             order = Order(
                 id=order_data['id'],
                 user_id=order_data['user_id'],
-                order_date=datetime.fromisoformat(order_data['order_date']),
+                order_date=datetime.fromisoformat(order_data['order_date']) + offset,
                 total_amount=order_data['total_amount']
             )
             session.add(order)
@@ -86,7 +97,7 @@ def insert_data(session, data):
             payment = Payment(
                 id=payment_data['id'],
                 order_id=payment_data['order_id'],
-                payment_date=datetime.fromisoformat(payment_data['payment_date']),
+                payment_date=datetime.fromisoformat(payment_data['payment_date']) + offset,
                 payment_method=payment_data['payment_method'],
                 payment_status=payment_data['payment_status']
             )
