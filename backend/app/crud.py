@@ -235,6 +235,52 @@ def search_orders(query_string):
 def calculate_cart_total(cart_items):
     return sum(item.card.price * item.quantity for item in cart_items)
 
+class CheckoutError(Exception):
+    """Checkout can't go ahead; the message is meant for the customer."""
+
+def checkout_cart(user_id, payment_method):
+    """Turn the user's cart into an order, all in one transaction.
+
+    Records an OrderItem per card, takes the quantities out of stock,
+    records the payment and empties the cart; if anything fails, nothing
+    is written. Cards without an inventory row aren't stock-tracked (the
+    admin Products page doesn't create one) and can always be ordered.
+    """
+    cart_items = get_cart_items(user_id)
+    if not cart_items:
+        raise CheckoutError('Cart is empty')
+
+    quantities = {}
+    for item in cart_items:
+        quantities[item.card_id] = quantities.get(item.card_id, 0) + item.quantity
+
+    try:
+        for card_id, quantity in quantities.items():
+            inventory = Inventory.query.filter_by(card_id=card_id).with_for_update().first()
+            if inventory is None:
+                continue
+            if inventory.quantity_available < quantity:
+                card = db.session.get(Card, card_id)
+                raise CheckoutError(
+                    f"Only {inventory.quantity_available} of '{card.card_name}' left in stock")
+            inventory.quantity_available -= quantity
+
+        now = datetime.utcnow()
+        order = Order(user_id=user_id, order_date=now, total_amount=calculate_cart_total(cart_items))
+        db.session.add(order)
+        db.session.flush()  # assigns order.id
+        for card_id, quantity in quantities.items():
+            db.session.add(OrderItem(order_id=order.id, card_id=card_id, quantity=quantity))
+        db.session.add(Payment(order_id=order.id, payment_date=now,
+                               payment_method=payment_method, payment_status='Completed'))
+        for item in cart_items:
+            db.session.delete(item)
+        db.session.commit()
+        return order
+    except Exception:
+        db.session.rollback()
+        raise
+
 
 
 # Payment CRUD operations

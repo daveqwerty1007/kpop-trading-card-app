@@ -8,6 +8,8 @@ const Checkout = () => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState('');
   const [error, setError] = useState(null);
+  const [checkoutError, setCheckoutError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,11 +31,15 @@ const Checkout = () => {
   }, []);
 
   const handleCheckout = async () => {
+    setCheckoutError(null);
+    setSubmitting(true);
     try {
       const response = await api.post('/orders/checkout', { payment_method: paymentMethod });
       navigate(`/order-confirmation/${response.data.order_id}`);
     } catch (error) {
-      setError('Checkout failed');
+      // Shown inline so the customer can fix it (e.g. out of stock) and retry.
+      setCheckoutError(error.response?.data?.message || 'Checkout failed');
+      setSubmitting(false);
     }
   };
 
@@ -62,7 +68,14 @@ const Checkout = () => {
           <option value="bank_transfer">Bank Transfer</option>
         </select>
       </div>
-      <button className="checkout-button" onClick={handleCheckout}>Complete Purchase</button>
+      <button
+        className="checkout-button"
+        onClick={handleCheckout}
+        disabled={!paymentMethod || cartItems.length === 0 || submitting}
+      >
+        Complete Purchase
+      </button>
+      {checkoutError && <p className="error">{checkoutError}</p>}
     </div>
   );
 };

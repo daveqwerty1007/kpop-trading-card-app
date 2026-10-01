@@ -1,15 +1,13 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from pydantic import ValidationError
-from datetime import datetime
 
 from ..utils import admin_required, current_user_id, owns_or_admin
 from ..crud import (
-    create_order, get_all_orders, get_order_by_id, get_order_filter_options, search_orders, update_order, delete_order,
-    get_cart_items, clear_cart, create_payment, calculate_cart_total
+    CheckoutError, checkout_cart, get_all_orders, get_order_by_id, get_order_filter_options, search_orders,
+    update_order, delete_order, get_cart_items, calculate_cart_total
 )
 from ..schemas import OrderSchema
-from ..models import Card
 
 bp = Blueprint('orders', __name__, url_prefix='/orders')
 
@@ -24,33 +22,16 @@ def cart():
 @bp.route('/checkout', methods=['POST'])
 @jwt_required()
 def checkout():
+    payment_method = (request.json or {}).get('payment_method')
+    if not payment_method:
+        return jsonify({'message': 'Please choose a payment method'}), 400
     try:
-        user_id = current_user_id()
-        cart_items = get_cart_items(user_id)
-        if not cart_items:
-            return jsonify({'message': 'Cart is empty'}), 400
-
-        total_amount = calculate_cart_total(cart_items)
-        order_data = {
-            'user_id': user_id,
-            'order_date': datetime.utcnow(),
-            'total_amount': total_amount
-        }
-        order = create_order(order_data)
-        payment_data = {
-            'order_id': order.id,
-            'payment_date': datetime.utcnow(),
-            'payment_method': request.json.get('payment_method'),
-            'payment_status': 'Completed'
-        }
-        create_payment(payment_data)
-        clear_cart(user_id)
-        return jsonify({'message': 'Checkout successful', 'order_id': order.id}), 200
-
-    except ValidationError as e:
-        return jsonify(e.errors()), 400
+        order = checkout_cart(current_user_id(), payment_method)
+    except CheckoutError as e:
+        return jsonify({'message': str(e)}), 400
     except Exception as e:
         return jsonify({'message': str(e)}), 500
+    return jsonify({'message': 'Checkout successful', 'order_id': order.id}), 200
 
 @bp.route('/<int:order_id>', methods=['GET'])
 @jwt_required()
