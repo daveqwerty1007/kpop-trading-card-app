@@ -4,23 +4,24 @@ import api from '../services/api';
 import './Card.css';
 
 const CardList = () => {
-  const [cards, setCards] = useState([]);
+  const location = useLocation();
+  const [allCards, setAllCards] = useState([]);
   const [error, setError] = useState('');
-  const [filters, setFilters] = useState({
+  // Seed sort_by from links like Home's "Latest" heading (/card?sort_by=latest).
+  const [filters, setFilters] = useState(() => ({
     artist: [],
     group: [],
     album: [],
     min_price: '',
     max_price: '',
-    sort_by: ''
-  });
+    sort_by: new URLSearchParams(location.search).get('sort_by') || ''
+  }));
   const [filterOptions, setFilterOptions] = useState({
     artists: [],
     groups: [],
     albums: []
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [collapsedSections, setCollapsedSections] = useState({
     artist: false,
     group: false,
@@ -29,52 +30,20 @@ const CardList = () => {
   });
   const cardsPerPage = 10;
   const navigate = useNavigate();
-  const location = useLocation();
+
+  // Follow later ?sort_by= changes (e.g. back/forward) without remounting.
+  // Return the same object when nothing changed: setting a fresh filters
+  // object from an effect that depends on filters loops forever.
+  useEffect(() => {
+    const sortBy = new URLSearchParams(location.search).get('sort_by');
+    if (sortBy) {
+      setFilters(prevFilters => (
+        prevFilters.sort_by === sortBy ? prevFilters : { ...prevFilters, sort_by: sortBy }
+      ));
+    }
+  }, [location.search]);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const sortBy = params.get('sort_by');
-    if (sortBy) {
-      setFilters(prevFilters => ({
-        ...prevFilters,
-        sort_by: sortBy
-      }));
-    }
-    fetchFilteredCards();
-    fetchFilterOptions();
-  }, [filters, currentPage]);
-
-  const fetchFilteredCards = () => {
-    const params = new URLSearchParams({
-      ...filters,
-      artist: filters.artist.join(','),
-      group: filters.group.join(','),
-      album: filters.album.join(','),
-      page: currentPage,
-      limit: cardsPerPage
-    });
-
-    api.get(`/cards/list?${params.toString()}`)
-      .then(response => {
-        const data = response.data;
-        if (Array.isArray(data)) {
-          // The backend returns the full filtered list regardless of page/limit,
-          // so pagination is applied client-side.
-          setTotalPages(Math.max(1, Math.ceil(data.length / cardsPerPage)));
-          const start = (currentPage - 1) * cardsPerPage;
-          setCards(data.slice(start, start + cardsPerPage));
-          setError('');
-        } else {
-          setError('Unexpected response format');
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching cards:', error);
-        setError('Failed to load cards');
-      });
-  };
-
-  const fetchFilterOptions = () => {
     api.get('/cards/filter-options')
       .then(response => {
         setFilterOptions({
@@ -86,7 +55,38 @@ const CardList = () => {
       .catch(error => {
         console.error('Error fetching filter options:', error);
       });
-  };
+  }, []);
+
+  useEffect(() => {
+    let ignore = false; // drop responses from superseded filter changes
+    const params = new URLSearchParams({
+      ...filters,
+      artist: filters.artist.join(','),
+      group: filters.group.join(','),
+      album: filters.album.join(',')
+    });
+
+    api.get(`/cards/list?${params.toString()}`)
+      .then(response => {
+        if (ignore) return;
+        if (Array.isArray(response.data)) {
+          setAllCards(response.data);
+          setError('');
+        } else {
+          setError('Unexpected response format');
+        }
+      })
+      .catch(error => {
+        if (ignore) return;
+        console.error('Error fetching cards:', error);
+        setError('Failed to load cards');
+      });
+    return () => { ignore = true; };
+  }, [filters]);
+
+  // The backend returns the full filtered list, so paginate client-side.
+  const totalPages = Math.max(1, Math.ceil(allCards.length / cardsPerPage));
+  const cards = allCards.slice((currentPage - 1) * cardsPerPage, currentPage * cardsPerPage);
 
   const handleCheckboxChange = (event) => {
     const { name, value, checked } = event.target;
