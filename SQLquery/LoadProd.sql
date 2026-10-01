@@ -2,7 +2,7 @@
 USE kpop_trading_card;
 
 -- Insert Users
-INSERT INTO `User` (`name`, `email`, `password`) VALUES
+INSERT INTO `user` (`name`, `email`, `password`) VALUES
 ('Alice Smith', 'alice@example.com', 'password123'),
 ('Bob Johnson', 'bob@example.com', 'password456'),
 ('Carol Williams', 'carol@example.com', 'password789'),
@@ -25,14 +25,14 @@ INSERT INTO `User` (`name`, `email`, `password`) VALUES
 ('Tina Martin', 'tina@example.com', 'password117');
 
 -- Insert Admins
-INSERT INTO `User` (`name`, `email`, `password`, `role`) VALUES
+INSERT INTO `user` (`name`, `email`, `password`, `role`) VALUES
 ('Admin User', 'admin@example.com', 'adminpass', 'admin'),
 ('Super Admin', 'superadmin@example.com', 'superpass', 'admin'),
 ('Manager', 'manager@example.com', 'managerpass', 'admin'),
 ('Support', 'support@example.com', 'supportpass', 'admin');
 
 -- Insert Cards
-INSERT INTO `Card` (`card_name`, `artist`, `group`, `album`, `price`, `description`, `image_url`) VALUES
+INSERT INTO `card` (`card_name`, `artist`, `group`, `album`, `price`, `description`, `image_url`) VALUES
 ('Blue Rose', 'Lisa', 'BlackPink', 'The Album', 10.99, 'A rare card featuring Lisa from BlackPink.', 'url_to_image1'),
 ('Red Sun', 'Jennie', 'BlackPink', 'The Album', 12.99, 'A rare card featuring Jennie from BlackPink.', 'url_to_image2'),
 ('Golden Hour', 'Jisoo', 'BlackPink', 'The Album', 11.99, 'A rare card featuring Jisoo from BlackPink.', 'url_to_image3'),
@@ -45,7 +45,7 @@ INSERT INTO `Card` (`card_name`, `artist`, `group`, `album`, `price`, `descripti
 ('Blue Moon', 'Suga', 'BTS', 'Map of the Soul: 7', 19.99, 'A rare card featuring Suga from BTS.', 'url_to_image10');
 
 -- Insert Orders
-INSERT INTO `Order` (`user_id`, `order_date`, `total_amount`) VALUES
+INSERT INTO `order` (`user_id`, `order_date`, `total_amount`) VALUES
 (1, '2024-07-01 10:00:00', 25.98),
 (2, '2024-07-02 12:00:00', 10.99),
 (3, '2024-07-03 14:00:00', 30.99),
@@ -68,7 +68,7 @@ INSERT INTO `Order` (`user_id`, `order_date`, `total_amount`) VALUES
 (20, '2024-07-20 17:00:00', 200.99);
 
 -- Insert Payments
-INSERT INTO `Payment` (`order_id`, `payment_date`, `payment_method`, `payment_status`) VALUES
+INSERT INTO `payment` (`order_id`, `payment_date`, `payment_method`, `payment_status`) VALUES
 (1, '2024-07-01 10:05:00', 'Credit Card', 'Completed'),
 (2, '2024-07-02 12:05:00', 'PayPal', 'Completed'),
 (3, '2024-07-03 14:05:00', 'Credit Card', 'Completed'),
@@ -91,7 +91,7 @@ INSERT INTO `Payment` (`order_id`, `payment_date`, `payment_method`, `payment_st
 (20, '2024-07-20 17:05:00', 'Debit Card', 'Completed');
 
 -- Insert Inventory
-INSERT INTO `Inventory` (`card_id`, `quantity_available`) VALUES
+INSERT INTO `inventory` (`card_id`, `quantity_available`) VALUES
 (1, 50),
 (2, 30),
 (3, 20),
@@ -104,7 +104,7 @@ INSERT INTO `Inventory` (`card_id`, `quantity_available`) VALUES
 (10, 45);
 
 -- Insert CartItems
-INSERT INTO `CartItem` (`user_id`, `card_id`, `quantity`) VALUES
+INSERT INTO `cart_item` (`user_id`, `card_id`, `quantity`) VALUES
 (1, 1, 2),
 (2, 3, 1),
 (3, 2, 3),
@@ -127,7 +127,7 @@ INSERT INTO `CartItem` (`user_id`, `card_id`, `quantity`) VALUES
 (20, 10, 1);
 
 -- Insert OrderItems
-INSERT INTO `OrderItem` (`order_id`, `card_id`, `quantity`) VALUES
+INSERT INTO `order_item` (`order_id`, `card_id`, `quantity`) VALUES
 (1, 1, 2),
 (2, 3, 1),
 (3, 2, 3),

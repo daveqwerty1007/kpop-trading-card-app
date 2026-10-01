@@ -5,11 +5,11 @@ SELECT
     o.order_date,
     p.payment_status
 FROM 
-    `Order` o
+    `order` o
 JOIN 
-    `User` u ON o.user_id = u.id
+    `user` u ON o.user_id = u.id
 LEFT JOIN 
-    Payment p ON o.id = p.order_id
+    `payment` p ON o.id = p.order_id
 WHERE 
     o.order_date <= NOW() - INTERVAL 7 DAY
     AND (p.payment_status IS NULL OR p.payment_status != 'Completed');

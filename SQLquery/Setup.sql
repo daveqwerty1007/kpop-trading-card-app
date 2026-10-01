@@ -1,6 +1,6 @@
 USE kpop_trading_card;
 
-CREATE TABLE `User` (
+CREATE TABLE `user` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `name` VARCHAR(150) NOT NULL,
     `email` VARCHAR(150) UNIQUE NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE `User` (
     `email_marketing` BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE TABLE `Card` (
+CREATE TABLE `card` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `card_name` VARCHAR(150) NOT NULL,
     `artist` VARCHAR(150) NOT NULL,
@@ -20,45 +20,45 @@ CREATE TABLE `Card` (
     `image_url` VARCHAR(200)
 );
 
-CREATE TABLE `Order` (
+CREATE TABLE `order` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `user_id` INT NOT NULL,
     `order_date` DATETIME NOT NULL,
     `total_amount` FLOAT NOT NULL,
-    FOREIGN KEY (`user_id`) REFERENCES `User`(`id`)
+    FOREIGN KEY (`user_id`) REFERENCES `user`(`id`)
 );
 
-CREATE TABLE `Payment` (
+CREATE TABLE `payment` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `order_id` INT NOT NULL,
     `payment_date` DATETIME NOT NULL,
     `payment_method` VARCHAR(50) NOT NULL,
     `payment_status` VARCHAR(50) NOT NULL,
-    FOREIGN KEY (`order_id`) REFERENCES `Order`(`id`)
+    FOREIGN KEY (`order_id`) REFERENCES `order`(`id`)
 );
 
-CREATE TABLE `Inventory` (
+CREATE TABLE `inventory` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `card_id` INT NOT NULL,
     `quantity_available` INT NOT NULL,
-    FOREIGN KEY (`card_id`) REFERENCES Card(`id`)
+    FOREIGN KEY (`card_id`) REFERENCES `card`(`id`)
 );
 
-CREATE TABLE `CartItem` (
+CREATE TABLE `cart_item` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `user_id` INT NOT NULL,
     `card_id` INT NOT NULL,
     `quantity` INT NOT NULL DEFAULT 1,
-    FOREIGN KEY (`user_id`) REFERENCES User(`id`),
-    FOREIGN KEY (`card_id`) REFERENCES Card(`id`)
+    FOREIGN KEY (`user_id`) REFERENCES `user`(`id`),
+    FOREIGN KEY (`card_id`) REFERENCES `card`(`id`)
 );
 
-CREATE TABLE OrderItem (
+CREATE TABLE `order_item` (
     id INT PRIMARY KEY AUTO_INCREMENT,
     order_id INT NOT NULL,
     card_id INT NOT NULL,
     quantity INT NOT NULL,
-    FOREIGN KEY (order_id) REFERENCES `Order`(id),
-    FOREIGN KEY (card_id) REFERENCES Card(id)
+    FOREIGN KEY (order_id) REFERENCES `order`(id),
+    FOREIGN KEY (card_id) REFERENCES `card`(id)
 );
 

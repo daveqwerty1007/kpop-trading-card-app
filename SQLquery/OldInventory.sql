@@ -8,13 +8,13 @@ SELECT
     MAX(o.order_date) AS last_sold_date,
     i.quantity_available
 FROM 
-    Card c
+    `card` c
 LEFT JOIN 
-    OrderItem oi ON c.id = oi.card_id
+    `order_item` oi ON c.id = oi.card_id
 LEFT JOIN 
-    `Order` o ON o.id = oi.order_id AND o.order_date >= NOW() - INTERVAL 3 MONTH
+    `order` o ON o.id = oi.order_id AND o.order_date >= NOW() - INTERVAL 3 MONTH
 JOIN 
-    Inventory i ON c.id = i.card_id
+    `inventory` i ON c.id = i.card_id
 GROUP BY 
     c.card_name, c.artist, c.`group`, c.album, i.quantity_available
 ORDER BY 

@@ -9,7 +9,7 @@ SELECT
     description,
     image_url
 FROM 
-    Card
+    `card`
 ORDER BY 
     id DESC
 LIMIT 5;
