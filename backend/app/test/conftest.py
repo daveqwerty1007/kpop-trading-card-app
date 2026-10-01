@@ -15,7 +15,11 @@ logging.basicConfig(level=logging.INFO)
 @pytest.fixture(scope='module')
 def test_client():
     flask_app = create_app()
-    
+    # Requests below share this one app context, so Flask-SQLAlchemy never
+    # ends the session between them. Roll back after each request like a real
+    # one would, so a failed request can't poison every later test.
+    flask_app.teardown_request(lambda exc: db.session.rollback())
+
     with flask_app.app_context():
         db.create_all()
         logging.info("Database tables created for testing.")
