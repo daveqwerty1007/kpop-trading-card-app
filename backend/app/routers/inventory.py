@@ -42,6 +42,8 @@ def update(inventory_id):
     try:
         inventory_data = request.json
         inventory = update_inventory(inventory_id, inventory_data)
+        if inventory is None:
+            return jsonify({'message': 'Inventory item not found'}), 404
         return jsonify(InventorySchema.from_orm(inventory).dict())
     except ValidationError as e:
         return jsonify({'errors': e.errors()}), 400
@@ -52,7 +54,8 @@ def update(inventory_id):
 @admin_required
 def delete(inventory_id):
     try:
-        delete_inventory(inventory_id)
+        if delete_inventory(inventory_id) is None:
+            return jsonify({'message': 'Inventory item not found'}), 404
         return '', 204
     except Exception as e:
         return jsonify({'message': str(e)}), 500

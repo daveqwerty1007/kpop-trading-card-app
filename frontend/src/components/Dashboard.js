@@ -21,7 +21,7 @@ const Dashboard = () => {
     try {
       const response = await api.get('/admin/dashboard');
       setStats(response.data);
-      setSalesData(response.data.sales_data_last_week);
+      setSalesData(response.data.sales_data_last_30_days);
     } catch (error) {
       setError('Failed to fetch dashboard stats');
     } finally {
@@ -66,7 +66,7 @@ const Dashboard = () => {
         </div>
       </div>
       <div className="chart-container">
-        <h2>Sales for the Past Week</h2>
+        <h2>Sales for the Past 30 Days</h2>
         <Line data={chartData} />
       </div>
       <CollapsibleList title="Fraudulent Orders" items={stats.fraudulent_orders} />

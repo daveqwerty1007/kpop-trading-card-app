@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, conint
 from typing import Optional
 from datetime import datetime
 
@@ -65,6 +65,7 @@ class OrderSchema(BaseModel):
     user_id: int
     order_date: datetime
     total_amount: float
+    status: Optional[str] = None
 
     class Config:
         orm_mode = True
@@ -112,6 +113,13 @@ class CartItemBase(BaseModel):
 
 class CartItemCreate(CartItemBase):
     pass
+
+class CartItemAddSchema(BaseModel):
+    card_id: int
+    quantity: conint(gt=0) = 1
+
+class CartItemQuantitySchema(BaseModel):
+    quantity: conint(gt=0)
 
 class CartItemSchema(CartItemBase):
     id: int

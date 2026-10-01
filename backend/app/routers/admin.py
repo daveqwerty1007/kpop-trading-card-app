@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
 from werkzeug.security import check_password_hash, generate_password_hash
 from pydantic import ValidationError
-from ..crud import create_user, detect_fraudulent_orders, get_old_inventory, get_order_count, get_product_count, get_restock_list, get_sales_data_last_week, get_top_spending_users, get_total_sales, get_user_count, update_user, delete_user
+from ..crud import create_user, detect_fraudulent_orders, get_old_inventory, get_order_count, get_product_count, get_restock_list, get_sales_data_last_30_days, get_top_spending_users, get_total_sales, get_user_count, update_user, delete_user, email_in_use, InUseError
 from ..models import User
 from ..schemas import UserSchema, UserUpdateSchema, UserRegisterSchema
 from ..utils import admin_required, current_profile
@@ -46,7 +46,11 @@ def logout():
 @admin_required
 def create_user_route():
     try:
-        data = request.json
+        data = request.json or {}
+        if not data.get('password'):
+            return jsonify({"message": "Password is required."}), 400
+        if email_in_use(data.get('email')):
+            return jsonify({"message": "That email is already registered."}), 409
         data['password'] = generate_password_hash(data['password'], method='pbkdf2:sha256')
         user_schema = UserRegisterSchema(**data)
         new_user = create_user(user_schema.dict())
@@ -66,6 +70,8 @@ def update_user_route():
             user_schema = UserSchema(**data)
         else:
             user_schema = UserUpdateSchema(**data)
+        if email_in_use(user_schema.email, exclude_user_id=user_id):
+            return jsonify({"message": "That email is already registered."}), 409
         updated_user = update_user(user_id, user_schema.dict())
         if updated_user:
             return jsonify({"message": f"User {user_id} updated successfully."}), 200
@@ -77,7 +83,10 @@ def update_user_route():
 @admin_required
 def delete_user_route():
     user_id = request.json.get('id')
-    user = delete_user(user_id)
+    try:
+        user = delete_user(user_id)
+    except InUseError as e:
+        return jsonify({"message": str(e)}), 409
     if user:
         return '', 204
     return jsonify({"message": "User not found"}), 404
@@ -91,7 +100,7 @@ def dashboard():
             "order_count": get_order_count(),
             "product_count": get_product_count(),
             "total_sales": get_total_sales(),
-            "sales_data_last_week": get_sales_data_last_week(),  # Ensure this is serializable
+            "sales_data_last_30_days": get_sales_data_last_30_days(),
             "fraudulent_orders": detect_fraudulent_orders(),
             "top_spending_users": get_top_spending_users(),
             "old_inventory": get_old_inventory(),

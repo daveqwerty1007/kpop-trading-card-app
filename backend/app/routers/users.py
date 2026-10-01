@@ -5,7 +5,7 @@ from flask_jwt_extended import (
 from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
 from pydantic import ValidationError
-from ..crud import create_user, get_all_users, get_user_by_id, get_user_filter_options, get_user_orders, search_users, update_user, delete_user
+from ..crud import InUseError, create_user, email_in_use, get_all_users, get_user_by_id, get_user_filter_options, get_user_orders, search_users, update_user, delete_user
 from ..models import User
 from ..schemas import UserPublicSchema, UserRegisterSchema, SettingsSchema
 from ..database import db
@@ -20,6 +20,8 @@ def register():
         data = request.json
         if not data.get('name') or not data.get('email') or not data.get('password'):
             return jsonify({"message": "Name, email, and password are required."}), 400
+        if email_in_use(data['email']):
+            return jsonify({"message": "That email is already registered."}), 409
         data['id'] = None
         data['password'] = generate_password_hash(data['password'], method='pbkdf2:sha256')
 
@@ -45,6 +47,8 @@ def update_name_and_email():
             return jsonify({"message": "Name and email are required."}), 400
         # Always the caller's own account, and only these two fields: passing
         # the body through let anyone set role/password on any account.
+        if email_in_use(data['email'], exclude_user_id=current_user_id()):
+            return jsonify({"message": "That email is already registered."}), 409
         user = update_user(current_user_id(), {'name': data['name'], 'email': data['email']})
         if user:
             return jsonify(UserPublicSchema.from_orm(user).dict()), 200
@@ -68,7 +72,11 @@ def logout():
 @bp.route('/', methods=['POST'])
 def create():
     try:
-        data = request.json
+        data = request.json or {}
+        if not data.get('password'):
+            return jsonify({"message": "Password is required."}), 400
+        if email_in_use(data.get('email')):
+            return jsonify({"message": "That email is already registered."}), 409
         data['id'] = None
         data['password'] = generate_password_hash(data['password'], method='pbkdf2:sha256')
         user_schema = UserRegisterSchema(**data)
@@ -95,7 +103,10 @@ def detail(user_id):
 def delete(user_id):
     if current_user_id() == user_id:  # Prevent users from deleting themselves
         return jsonify({"message": "Cannot delete own account"}), 403
-    user = delete_user(user_id)
+    try:
+        user = delete_user(user_id)
+    except InUseError as e:
+        return jsonify({"message": str(e)}), 409
     if user:
         return jsonify({"message": "User deleted successfully"}), 204
     return jsonify({"message": "User not found"}), 404

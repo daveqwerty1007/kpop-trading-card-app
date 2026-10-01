@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from pydantic import ValidationError
-from ..crud import create_card, get_card_by_id, get_filter_options, search_cards, update_card, delete_card, get_all_cards
+from ..crud import InUseError, create_card, get_card_by_id, get_filter_options, search_cards, update_card, delete_card, get_all_cards
 from ..schemas import CardSchema,CardSchemaAdd
 from ..models import Card
 from ..utils import admin_required
@@ -34,9 +34,11 @@ def detail(card_id):
 @admin_required
 def update(card_id):
     try:
-        card_data = request.json
-        card = CardSchema(**card_data)
+        # CardSchemaAdd has no id field, so a body id can't change the primary key.
+        card = CardSchemaAdd(**request.json)
         updated_card = update_card(card_id, card.dict())
+        if updated_card is None:
+            return jsonify({'message': 'Card not found'}), 404
         return jsonify(CardSchema.from_orm(updated_card).dict())
     except ValidationError as e:
         return jsonify(e.errors()), 400
@@ -46,11 +48,11 @@ def update(card_id):
 def delete(card_id):
     try:
         card = delete_card(card_id)
-        if card is None:
-            return jsonify({'message': 'Card not found'}), 404
-        return '', 204
-    except ValidationError as e:
-        return jsonify(e.errors()), 400
+    except InUseError as e:
+        return jsonify({'message': str(e)}), 409
+    if card is None:
+        return jsonify({'message': 'Card not found'}), 404
+    return '', 204
 
 @bp.route('/list', methods=['GET'])
 def list_cards():

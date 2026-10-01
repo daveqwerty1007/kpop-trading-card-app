@@ -47,7 +47,16 @@ class Order(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     order_date = db.Column(db.DateTime, nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
-    items = db.relationship('OrderItem', back_populates='order') 
+    # Deleting an order deletes its line items and payments with it.
+    items = db.relationship('OrderItem', back_populates='order', cascade='all, delete-orphan')
+    payments = db.relationship('Payment', backref='order', cascade='all, delete-orphan')
+
+    @property
+    def status(self):
+        """Status of the most recent payment, or 'Unpaid' if there is none."""
+        if not self.payments:
+            return 'Unpaid'
+        return max(self.payments, key=lambda payment: payment.payment_date).payment_status
 
     def to_dict(self):
         return {
@@ -71,7 +80,8 @@ class Inventory(db.Model):
     card_id = db.Column(db.Integer, db.ForeignKey('card.id'), nullable=False)
     quantity_available = db.Column(db.Integer, nullable=False)
 
-    card = db.relationship('Card', backref=db.backref('inventory_items', lazy=True))
+    # cascade: stock rows are deleted with their card
+    card = db.relationship('Card', backref=db.backref('inventory_items', lazy=True, cascade='all'))
 
 class CartItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -79,8 +89,9 @@ class CartItem(db.Model):
     card_id = db.Column(db.Integer, db.ForeignKey('card.id'), nullable=False)
     quantity = db.Column(db.Integer, nullable=False, default=1)
     
-    user = db.relationship('User', backref=db.backref('cart_items', lazy=True))
-    card = db.relationship('Card', backref=db.backref('cart_items', lazy=True))
+    # cascade: cart entries are deleted with their user or card
+    user = db.relationship('User', backref=db.backref('cart_items', lazy=True, cascade='all'))
+    card = db.relationship('Card', backref=db.backref('cart_items', lazy=True, cascade='all'))
 
     def to_dict(self):
         return {
@@ -98,7 +109,7 @@ class OrderItem(db.Model):
     card_id = db.Column(db.Integer, db.ForeignKey("card.id"))
     quantity = db.Column(db.Integer, nullable=False)
     
-    order = db.relationship('Order', backref=db.backref('order_items', lazy=True))
+    order = db.relationship('Order', back_populates='items')
     card = db.relationship('Card', backref=db.backref('order_items', lazy=True))
 
     def to_dict(self):

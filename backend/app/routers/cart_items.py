@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
-from ..crud import create_cart_item, get_cart_item_by_id, update_cart_item, delete_cart_item, get_cart_items, get_card_by_id
-from ..schemas import CartItemSchema, CardSchema
+from pydantic import ValidationError
+from ..crud import add_to_cart, get_cart_item_by_id, update_cart_item, delete_cart_item, get_cart_items, get_card_by_id
+from ..schemas import CartItemAddSchema, CartItemQuantitySchema, CartItemSchema, CardSchema
 from ..utils import current_user_id
 
 bp = Blueprint('cart_items', __name__, url_prefix='/cart_items')
@@ -9,10 +10,13 @@ bp = Blueprint('cart_items', __name__, url_prefix='/cart_items')
 @bp.route('/', methods=['POST'])
 @jwt_required()
 def create():
-    cart_item_data = request.json
-    user_id = current_user_id()
-    cart_item_data['user_id'] = user_id
-    cart_item = create_cart_item(cart_item_data)
+    try:
+        data = CartItemAddSchema(**(request.json or {}))
+    except ValidationError as e:
+        return jsonify({'errors': e.errors()}), 400
+    if get_card_by_id(data.card_id) is None:
+        return jsonify({'message': 'Card not found'}), 404
+    cart_item = add_to_cart(current_user_id(), data.card_id, data.quantity)
     return jsonify(CartItemSchema.from_orm(cart_item).dict()), 201
 
 @bp.route('/<int:cart_item_id>', methods=['GET'])
@@ -33,7 +37,11 @@ def update(cart_item_id):
         return jsonify({'message': 'Cart item not found'}), 404
     if cart_item.user_id != current_user_id():
         return jsonify({'message': 'Forbidden'}), 403
-    cart_item = update_cart_item(cart_item_id, {'quantity': request.json.get('quantity')})
+    try:
+        data = CartItemQuantitySchema(**(request.json or {}))
+    except ValidationError as e:
+        return jsonify({'errors': e.errors()}), 400
+    cart_item = update_cart_item(cart_item_id, {'quantity': data.quantity})
     return jsonify(CartItemSchema.from_orm(cart_item).dict())
 
 @bp.route('/<int:cart_item_id>', methods=['DELETE'])

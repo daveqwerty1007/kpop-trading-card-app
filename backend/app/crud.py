@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_, desc, func, or_
 from .models import db, User, Card, Order, Payment, Inventory, CartItem, OrderItem
 from . import database
 from werkzeug.security import generate_password_hash
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
 
 # User CRUD operations
@@ -24,10 +24,21 @@ def update_user(user_id, user_data):
         db.session.commit()
     return user
 
+class InUseError(Exception):
+    """A record can't be deleted because sales history refers to it."""
+
+def email_in_use(email, exclude_user_id=None):
+    query = User.query.filter(User.email == email)
+    if exclude_user_id is not None:
+        query = query.filter(User.id != exclude_user_id)
+    return db.session.query(query.exists()).scalar()
+
 def delete_user(user_id):
     user = db.session.get(User, user_id)
     if user:
-
+        # Their cart goes with them, but orders are sales records.
+        if Order.query.filter_by(user_id=user_id).first():
+            raise InUseError("This user has orders, so they can't be deleted.")
         db.session.delete(user)
         db.session.commit()
     return user
@@ -121,6 +132,9 @@ def update_card(card_id, card_data):
 def delete_card(card_id):
     card = db.session.get(Card, card_id)
     if card:
+        # Its stock and cart entries go with it, but past orders must keep it.
+        if OrderItem.query.filter_by(card_id=card_id).first():
+            raise InUseError("This card appears in past orders, so it can't be deleted.")
         db.session.delete(card)
         db.session.commit()
     return card
@@ -190,7 +204,7 @@ def delete_order(order_id):
     return order
 
 def get_all_orders(user_id=None, min_date=None, max_date=None, min_total=None, max_total=None, sort_by=None):
-    query = Order.query
+    query = Order.query.options(selectinload(Order.payments))  # for Order.status
 
     if user_id:
         query = query.filter(Order.user_id == user_id)
@@ -317,15 +331,18 @@ def get_inventory_by_id(inventory_id):
 
 def update_inventory(inventory_id, inventory_data):
     inventory = Inventory.query.get(inventory_id)
-    for key, value in inventory_data.items():
-        setattr(inventory, key, value)
-    db.session.commit()
+    if inventory:
+        for key, value in inventory_data.items():
+            setattr(inventory, key, value)
+        db.session.commit()
     return inventory
 
 def delete_inventory(inventory_id):
     inventory = Inventory.query.get(inventory_id)
-    db.session.delete(inventory)
-    db.session.commit()
+    if inventory:
+        db.session.delete(inventory)
+        db.session.commit()
+    return inventory
 
 def get_all_inventory():
     return Inventory.query.all()
@@ -343,12 +360,12 @@ def get_total_sales():
     total_sales = db.session.query(func.sum(Order.total_amount)).scalar()
     return round(total_sales, 2) if total_sales is not None else 0
 
-def get_sales_data_last_week():
-    one_week_ago = datetime.utcnow() - timedelta(days=30)
+def get_sales_data_last_30_days():
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
     sales_data = db.session.query(
         func.date(Order.order_date).label('date'),
         func.sum(Order.total_amount).label('sales')
-    ).filter(Order.order_date >= one_week_ago).group_by(func.date(Order.order_date)).all()
+    ).filter(Order.order_date >= thirty_days_ago).group_by(func.date(Order.order_date)).all()
     
     return [{"date": str(data.date), "sales": float(data.sales)} for data in sales_data]
 
@@ -423,7 +440,7 @@ def get_restock_list():
      .filter(Order.order_date >= three_months_ago) \
      .group_by(Card.card_name, Card.artist, Card.group, Card.album, Inventory.quantity_available) \
      .having(Inventory.quantity_available < 2) \
-     .order_by('total_quantity_sold', 'last_sold_date') \
+     .order_by(desc('total_quantity_sold'), desc('last_sold_date')) \
      .limit(10).all()
     
     # Convert results to list of dicts
@@ -431,6 +448,17 @@ def get_restock_list():
 
 
 # Cart CRUD operations
+
+def add_to_cart(user_id, card_id, quantity):
+    """Add a card to the user's cart, topping up its row if already there."""
+    cart_item = CartItem.query.filter_by(user_id=user_id, card_id=card_id).first()
+    if cart_item:
+        cart_item.quantity += quantity
+    else:
+        cart_item = CartItem(user_id=user_id, card_id=card_id, quantity=quantity)
+        db.session.add(cart_item)
+    db.session.commit()
+    return cart_item
 
 def create_cart_item(cart_item_data):
     cart_item = CartItem(**cart_item_data)
