@@ -9,90 +9,86 @@ This application is designed for a P2P trading business of K-pop trading cards. 
 We will use trading data from the past 3 months to initialize the application and update it over time.
 
 ## Folder Structure
+```
 kpop-trading-card-app/
 ├── backend/
-│ ├── app/
-│ │ ├── __init__.py
-│ │ ├── main.py
-│ │ ├── crud.py
-│ │ ├── database.py
-│ │ └── routers/
-│ │     ├── __init__.py
-│ │     ├── admin.py
-│ │     ├── cards.py
-│ │     ├── cart_items.py
-│ │     ├── inventory.py
-│ │     ├── order_items.py
-│ │     ├── orders.py
-│ │     ├── payments.py
-│ │     └── users.py
-│ └── data/
-│     └── loaddata.py
-├── frontend/
-│ ├── public/
-│ └── src/
-├── SQLquery/
-│ └── Setup.sql
-├── key-pair.pem
-├── Procfile
-├── README.md
-├── requirements.txt
-└── sample_data/
-
+│   ├── app/
+│   │   ├── __init__.py       # create_app(): config, auth, blueprints
+│   │   ├── main.py           # entry point: python -m app.main
+│   │   ├── models.py         # SQLAlchemy models
+│   │   ├── schemas.py        # pydantic request/response schemas
+│   │   ├── crud.py           # database operations
+│   │   ├── utils.py          # auth helpers (admin_required, ...)
+│   │   ├── routers/          # one Flask blueprint per resource
+│   │   └── test/             # pytest suite
+│   ├── data/
+│   │   ├── data.json         # sample data
+│   │   ├── loaddata.py       # loads data.json into the database
+│   │   ├── gendata.py        # regenerates data.json
+│   │   └── fetchImageURL.py  # fetches sample image URLs from Unsplash
+│   ├── Dockerfile
+│   └── requirements.txt
+├── frontend/                 # React app (Create React App)
+└── SQLquery/                 # MySQL scripts for the course report queries
+```
 
 ## Setting Up the Environment
 
 ### Prerequisites
-- Python 3.8+
-- MySQL
+- Python 3.8+ (tested with 3.11)
+- Node.js and npm (tested with Node 22)
 
-### Installation Steps
+### Backend
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate          # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python data/loaddata.py           # loads sample data into backend/app/kpop_trading.db
+python -m app.main                # API on http://localhost:5001
+```
 
-1. **Clone the Repository**
-    ```bash
-    git clone https://github.com/your-repo-link/kpop-trading-card-app.git
-    cd kpop-trading-card-app
-    ```
+Environment variables:
+- `SECRET_KEY` signs login tokens. If it isn't set, the server picks a random
+  key each time it starts, so everyone gets logged out on restart. Set it to a
+  long random value anywhere other than local development, e.g.
+  `export SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")`.
+- `DATABASE_URL` points at another database instead of the default SQLite
+  file, e.g. `mysql+mysqlconnector://user:password@host/dbname`.
 
-2. **Create and Activate Virtual Environment**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate 
-    ```
+`loaddata.py` moves the sample orders' dates so the newest one is from today,
+which keeps the dashboard and recommendations populated.
 
-3. **Install Dependencies**
-    ```bash
-    pip install -r requirements.txt
-    ```
+### Frontend
+```bash
+cd frontend
+npm install
+npm start                         # http://localhost:3000
+```
+The frontend calls the API at `REACT_APP_API_BASE_URL` in `frontend/.env`
+(`http://localhost:5001` by default).
 
-4. **Set Up Flask application**
-    - load the flask application:
-        ```bash
-        export FLASK_APP = app.py;
-        ```
-    - load the sample data:
-        ```bash
-        python backend/data/loaddata.py
-        ```
+### Sample logins
+- Admin (use the "Admin Login" tab): `adminone@example.com` / `adminpassword123`
+- Customers: any user in `backend/data/data.json` (passwords are listed there)
 
-5. **Run the Application**
-    ```bash
-        flask run
-    ```
-    The app should now be running on `http://127.0.0.1:5000`.
+### Tests
+```bash
+cd backend
+pytest
+```
 
 ## Project Structure
 
 ### Backend
-- **backend/app/__init__.py:** Initializes the backend module.
+- **backend/app/routers/:** API endpoints, one blueprint per resource.
 - **backend/data/loaddata.py:** Script to load sample data into the database.
-- **backend/app/routers/:** Creating URL to call or update data when needed 
-- **SQLquery/Setup.sql:** SQL script to set up the database schema.
-- **backend/app/database.py:** Store RDS login credential and other settings.
+- **SQLquery/Setup.sql:** MySQL schema matching the app's tables, used for the course report queries.
 
 ### Frontend
-- **frontend/public/:** Static files for styles and JavaScript.
-- **frontend/src/:** Webpage file.
+- **frontend/public/:** Static files.
+- **frontend/src/components/:** Pages and components.
+- **frontend/src/services/api.js:** API client; attaches the login token to requests.
 
 ## Features
 - User authentication
