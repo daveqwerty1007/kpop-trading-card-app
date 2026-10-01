@@ -1,4 +1,5 @@
 import os
+import secrets
 from flask import Flask, jsonify, request, render_template
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -35,9 +36,16 @@ def create_app():
     # Initialize the database
     init_db(app)
 
-    # Falls back to a fixed dev key so local/test runs don't need setup, but
-    # any real deployment should set SECRET_KEY explicitly.
-    app.secret_key = os.environ.get('SECRET_KEY', 'dev-only-insecure-secret-key')
+    # This key signs login tokens, so it must never be a value from the source
+    # (anyone could forge admin tokens with it). Without SECRET_KEY, use a
+    # random key for this run: nothing breaks, but logins reset on restart.
+    secret_key = os.environ.get('SECRET_KEY')
+    if not secret_key:
+        secret_key = secrets.token_hex(32)
+        if os.environ.get("TESTING") != "1":
+            app.logger.warning("SECRET_KEY is not set; using a random key, so logins "
+                               "will reset whenever the server restarts.")
+    app.secret_key = secret_key
 
     # Initialize Flask-Login
     login_manager = LoginManager()

@@ -1,6 +1,9 @@
+import os
+import sys
 import requests
 
-UNSPLASH_ACCESS_KEY = '-mu1IUvjbPAxi5UYsXUh7ae1tB5gFZJ830i-7h4XBPo'  
+# Never commit this key; export it before running the script.
+UNSPLASH_ACCESS_KEY = os.environ.get('UNSPLASH_ACCESS_KEY')
 UNSPLASH_URL = 'https://api.unsplash.com/photos/random'
 UNSPLASH_LIMIT = 50
 
@@ -26,6 +29,8 @@ def save_image_urls(image_urls, filename='image_urls.txt'):
             file.write(url + '\n')
 
 def main():
+    if not UNSPLASH_ACCESS_KEY:
+        sys.exit('Set UNSPLASH_ACCESS_KEY to your Unsplash API access key first.')
     image_urls = fetch_unsplash_image_urls()
     save_image_urls(image_urls)
     print(f'Successfully fetched and saved {len(image_urls)} image URLs.')
