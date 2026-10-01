@@ -96,6 +96,7 @@ def delete(order_id):
         return jsonify({'message': str(e)}), 500
 
 @bp.route('/list', methods=['GET'])
+@admin_required
 def list_orders():
     user_id = request.args.get('user_id', type=int)
     min_date = request.args.get('min_date')
@@ -111,6 +112,7 @@ def list_orders():
         return jsonify(e.errors()), 400
 
 @bp.route('/filter-options', methods=['GET'])
+@admin_required
 def order_filter_options():
     try:
         options = get_order_filter_options()
@@ -119,6 +121,7 @@ def order_filter_options():
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/search', methods=['GET'])
+@admin_required
 def search_orders_route():
     query = request.args.get('q')
     if not query:

@@ -1,14 +1,14 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
 from pydantic import ValidationError
 from ..crud import create_card, get_card_by_id, get_filter_options, search_cards, update_card, delete_card, get_all_cards
 from ..schemas import CardSchema,CardSchemaAdd
 from ..models import Card
+from ..utils import admin_required
 
 bp = Blueprint('cards', __name__, url_prefix='/cards')
 
 @bp.route('/', methods=['POST'])
-@jwt_required()
+@admin_required
 def create():
     try:
         card_data = request.json
@@ -31,7 +31,7 @@ def detail(card_id):
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/<int:card_id>', methods=['PUT'])
-@jwt_required()
+@admin_required
 def update(card_id):
     try:
         card_data = request.json
@@ -42,7 +42,7 @@ def update(card_id):
         return jsonify(e.errors()), 400
 
 @bp.route('/<int:card_id>', methods=['DELETE'])
-@jwt_required()
+@admin_required
 def delete(card_id):
     try:
         card = delete_card(card_id)

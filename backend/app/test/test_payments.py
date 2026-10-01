@@ -1,4 +1,14 @@
-def test_create_payment(test_client, init_database, create_order):
+def test_create_payment(test_client, init_database, create_order, admin_headers):
+    order_id, _headers = create_order
+    response = test_client.post('/payments/', json={
+        'order_id': order_id,
+        'payment_date': '2022-01-01T00:00:00Z',
+        'payment_method': 'credit_card',
+        'payment_status': 'Completed'
+    }, headers=admin_headers)
+    assert response.status_code == 201
+
+def test_owner_cannot_create_payment(test_client, init_database, create_order):
     order_id, headers = create_order
     response = test_client.post('/payments/', json={
         'order_id': order_id,
@@ -6,21 +16,33 @@ def test_create_payment(test_client, init_database, create_order):
         'payment_method': 'credit_card',
         'payment_status': 'Completed'
     }, headers=headers)
-    assert response.status_code == 201
+    assert response.status_code == 403
 
 def test_get_payment(test_client, init_database, create_payment):
-    payment_id, headers = create_payment
+    payment_id, headers, _admin_headers = create_payment
     response = test_client.get(f'/payments/{payment_id}', headers=headers)
     assert response.status_code == 200
 
 def test_update_payment(test_client, init_database, create_payment):
-    payment_id, headers = create_payment
+    payment_id, _headers, admin_headers = create_payment
     response = test_client.put(f'/payments/{payment_id}', json={
         'payment_status': 'Pending'
-    }, headers=headers)
+    }, headers=admin_headers)
     assert response.status_code == 200
 
+def test_owner_cannot_update_payment(test_client, init_database, create_payment):
+    payment_id, headers, _admin_headers = create_payment
+    response = test_client.put(f'/payments/{payment_id}', json={
+        'payment_status': 'Completed'
+    }, headers=headers)
+    assert response.status_code == 403
+
 def test_delete_payment(test_client, init_database, create_payment):
-    payment_id, headers = create_payment
-    response = test_client.delete(f'/payments/{payment_id}', headers=headers)
+    payment_id, _headers, admin_headers = create_payment
+    response = test_client.delete(f'/payments/{payment_id}', headers=admin_headers)
     assert response.status_code == 204
+
+def test_owner_cannot_delete_payment(test_client, init_database, create_payment):
+    payment_id, headers, _admin_headers = create_payment
+    response = test_client.delete(f'/payments/{payment_id}', headers=headers)
+    assert response.status_code == 403

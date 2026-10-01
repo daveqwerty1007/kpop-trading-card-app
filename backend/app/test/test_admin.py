@@ -1,3 +1,4 @@
+import time
 from werkzeug.security import generate_password_hash
 from app.database import db
 from app.models import User
@@ -95,4 +96,23 @@ def test_admin_routes_reject_non_admin(test_client):
     token = login_resp.get_json()['access_token']
 
     response = test_client.get('/admin/dashboard', headers={'Authorization': f'Bearer {token}'})
+    assert response.status_code == 403
+
+
+def test_token_signed_with_old_fallback_key_is_rejected(test_client):
+    # The app used to fall back to this fixed key when SECRET_KEY was unset,
+    # letting anyone mint admin tokens.
+    import jwt
+    now = int(time.time())
+    forged = jwt.encode({'sub': '1', 'role': 'admin', 'type': 'access', 'fresh': False,
+                         'jti': 'forged', 'iat': now, 'nbf': now, 'exp': now + 600},
+                        'dev-only-insecure-secret-key', algorithm='HS256')
+    response = test_client.get('/admin/dashboard', headers={'Authorization': f'Bearer {forged}'})
+    assert response.status_code in (401, 422)
+
+
+def test_admin_profile_requires_admin(test_client):
+    test_client.post('/users/', json={'name': 'Plain', 'email': 'plain@example.com', 'password': 'pw'})
+    token = test_client.post('/users/login', json={'email': 'plain@example.com', 'password': 'pw'}).get_json()['access_token']
+    response = test_client.get('/admin/profile', headers={'Authorization': f'Bearer {token}'})
     assert response.status_code == 403

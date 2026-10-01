@@ -9,7 +9,7 @@ from ..crud import create_user, get_all_users, get_user_by_id, get_user_filter_o
 from ..models import User
 from ..schemas import UserPublicSchema, UserRegisterSchema, SettingsSchema
 from ..database import db
-from ..utils import current_profile, current_user_id
+from ..utils import admin_required, current_profile, current_user_id, owns_or_admin
 import logging
 
 bp = Blueprint('users', __name__, url_prefix='/users')
@@ -37,20 +37,18 @@ def register():
 
 
 @bp.route('/update_user', methods=['POST'])
+@jwt_required()
 def update_name_and_email():
     try:
-
-        data = request.json
-        if not data.get('name') or not data.get('email') or not  data.get('id'):
-            return jsonify({"message": "Name, email, and id required."}), 400
-        update_user(data.get('id'), data)
-        user = User.query.get(data.get('id'))
+        data = request.json or {}
+        if not data.get('name') or not data.get('email'):
+            return jsonify({"message": "Name and email are required."}), 400
+        # Always the caller's own account, and only these two fields: passing
+        # the body through let anyone set role/password on any account.
+        user = update_user(current_user_id(), {'name': data['name'], 'email': data['email']})
         if user:
-            user_data = UserPublicSchema.from_orm(user).dict()
-            return jsonify(user_data), 200
+            return jsonify(UserPublicSchema.from_orm(user).dict()), 200
         return jsonify({"message": "User not found"}), 404
-    except ValidationError as e:
-        return jsonify({"errors": e.errors()}), 400
     except Exception as e:
         return jsonify({"message": "An error occurred", "error": str(e)}), 500
 @bp.route('/login', methods=['POST'])
@@ -80,7 +78,10 @@ def create():
         return jsonify({"errors": e.errors()}), 400
 
 @bp.route('/<int:user_id>', methods=['GET'])
+@jwt_required()
 def detail(user_id):
+    if not owns_or_admin(user_id, current_user_id()):
+        return jsonify({"message": "Forbidden"}), 403
     try:
         user = get_user_by_id(user_id)
         if user is None:
@@ -90,7 +91,7 @@ def detail(user_id):
         return jsonify({"error": str(e)}), 500
 
 @bp.route('/<int:user_id>', methods=['DELETE'])
-@jwt_required()
+@admin_required
 def delete(user_id):
     if current_user_id() == user_id:  # Prevent users from deleting themselves
         return jsonify({"message": "Cannot delete own account"}), 403
@@ -100,6 +101,7 @@ def delete(user_id):
     return jsonify({"message": "User not found"}), 404
 
 @bp.route('/list', methods=['GET'])
+@admin_required
 def list_users():
     name = request.args.get('name')
     email = request.args.get('email')
@@ -112,6 +114,7 @@ def list_users():
         return jsonify(e.errors()), 400
 
 @bp.route('/filter-options', methods=['GET'])
+@admin_required
 def user_filter_options():
     try:
         options = get_user_filter_options()
@@ -120,6 +123,7 @@ def user_filter_options():
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/search', methods=['GET'])
+@admin_required
 def search_users_route():
     query = request.args.get('q')
     if not query:

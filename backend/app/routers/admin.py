@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required
+from flask_jwt_extended import create_access_token
 from werkzeug.security import check_password_hash, generate_password_hash
 from pydantic import ValidationError
 from ..crud import create_user, detect_fraudulent_orders, get_old_inventory, get_order_count, get_product_count, get_restock_list, get_sales_data_last_week, get_top_spending_users, get_total_sales, get_user_count, update_user, delete_user
@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.DEBUG)  # Set the level to DEBUG or INFO as ne
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 @bp.route('/profile', methods=['GET'])
-@jwt_required()
+@admin_required
 def profile():
     admin_data = current_profile(User)
     if admin_data:

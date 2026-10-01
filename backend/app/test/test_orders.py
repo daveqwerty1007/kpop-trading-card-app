@@ -43,7 +43,7 @@ def _checkout_order(test_client):
         'price': 25.0,
         'description': 'This is a test card.',
         'image_url': 'http://example.com/test.jpg'
-    }, headers=headers)
+    }, headers=_admin_headers(test_client))
     card_id = card_resp.get_json()['id']
 
     test_client.post('/cart_items/', json={'card_id': card_id, 'quantity': 2}, headers=headers)
@@ -90,3 +90,13 @@ def test_delete_order(test_client):
 
     delete_response = test_client.delete(f'/orders/{order_id}', headers=admin_headers)
     assert delete_response.status_code == 204
+
+def test_order_listing_requires_admin(test_client):
+    _checkout_order(test_client)
+    user_headers = _user_headers(test_client)
+    for path in ['/orders/list', '/orders/search?q=Order', '/orders/filter-options']:
+        assert test_client.get(path).status_code == 401
+        assert test_client.get(path, headers=user_headers).status_code == 403
+    response = test_client.get('/orders/list', headers=_admin_headers(test_client))
+    assert response.status_code == 200
+    assert len(response.get_json()) >= 1
