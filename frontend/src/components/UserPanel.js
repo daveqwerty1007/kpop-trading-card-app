@@ -57,6 +57,7 @@ const handleLogout = async () => {
 const Account = () => {
   const [accountDetails, setAccountDetails] = useState({});
   const [editing, setEditing] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
     api.get('/users/current')
@@ -72,12 +73,13 @@ const Account = () => {
   };
 
   const handleSave = () => {
+    setSaveError(null);
     api.post('/users/update_user', accountDetails)
       .then(response => {
         setAccountDetails(response.data);
         setEditing(false);
       })
-      .catch(error => console.error('Error updating account details:', error));
+      .catch(error => setSaveError(error.response?.data?.message || 'Could not save your details.'));
   };
 
   return (
@@ -95,6 +97,7 @@ const Account = () => {
           </label>
           <button onClick={handleSave}>Save</button>
           <button onClick={() => setEditing(false)}>Cancel</button>
+          {saveError && <p className="error">{saveError}</p>}
         </div>
       ) : (
         <div>

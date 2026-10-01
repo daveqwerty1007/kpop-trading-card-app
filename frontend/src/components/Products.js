@@ -6,6 +6,7 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionError, setActionError] = useState(null);
   const [form, setForm] = useState({ id: null, card_name: '', artist: '', group: '', album: '', price: '', description: '', image_url: '' });
   const [isEditing, setIsEditing] = useState(false);
 
@@ -33,6 +34,7 @@ const Products = () => {
     e.preventDefault();
     const productData = { ...form, price: parseFloat(form.price) }; // Ensure price is a number
 
+    setActionError(null);
     try {
       if (isEditing) {
         await api.put(`/cards/${form.id}`, productData);
@@ -44,7 +46,7 @@ const Products = () => {
       setIsEditing(false);
       fetchProducts(); // Refresh products list
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to save product');
+      setActionError(error.response?.data?.message || 'Failed to save product');
     }
   };
 
@@ -54,11 +56,12 @@ const Products = () => {
   };
 
   const deleteProduct = async (productId) => {
+    setActionError(null);
     try {
       await api.delete(`/cards/${productId}`);
       setProducts(products.filter(product => product.id !== productId));
     } catch (error) {
-      setError('Failed to delete product');
+      setActionError(error.response?.data?.message || 'Failed to delete product');
     }
   };
 
@@ -68,6 +71,7 @@ const Products = () => {
   return (
     <div className="products">
       <h1>Products</h1>
+      {actionError && <p className="error">{actionError}</p>}
       <form onSubmit={handleSubmit}>
         <input
           type="text"

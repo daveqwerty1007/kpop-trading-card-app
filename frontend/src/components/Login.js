@@ -66,7 +66,8 @@ const Login = () => {
     } catch (err) {
         console.error('Registration error:', err);
         const errors = err.response?.data?.errors;
-        setError(errors ? errors.map(e => e.msg).join(', ') : 'An error occurred. Please try again.');
+        setError(errors ? errors.map(e => e.msg).join(', ')
+          : err.response?.data?.message || 'An error occurred. Please try again.');
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import './CardDetail.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
@@ -11,12 +11,21 @@ function CardDetail() {
   const [relatedCards, setRelatedCards] = useState([]);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [cartStatus, setCartStatus] = useState(null); // 'added' | 'login' | error message
 
   useEffect(() => {
-    fetchCardData();
-  }, [id]);
+    setCartStatus(null);
 
-  const fetchCardData = () => {
+    const fetchRelatedCards = (artistFirstName) => {
+      api.get(`/cards/search?q=${encodeURIComponent(artistFirstName)}`)
+        .then(response => {
+          setRelatedCards(response.data.filter(relatedCard => relatedCard.id !== parseInt(id)));
+        })
+        .catch(error => {
+          console.error('Error fetching related cards:', error);
+        });
+    };
+
     api.get(`/cards/${id}`)
       .then(response => {
         setCard(response.data);
@@ -26,27 +35,21 @@ function CardDetail() {
         console.error('Error fetching card:', error);
         setError('Error fetching card. Please try again later.');
       });
-  };
-
-  const fetchRelatedCards = (artistFirstName) => {
-    api.get(`/cards/search?q=${artistFirstName}`)
-      .then(response => {
-        setRelatedCards(response.data.filter(relatedCard => relatedCard.id !== parseInt(id)));
-      })
-      .catch(error => {
-        console.error('Error fetching related cards:', error);
-      });
-  };
+  }, [id]);
 
   const handleAddToCart = () => {
     api.post('/cart_items/', {
       card_id: card.id,
       quantity: quantity
     })
-    .then(response => {
-      console.log(`Added ${quantity} of ${response.data.card_name} to the cart.`);
-    })
-    .catch(error => console.error('Error adding item to cart:', error));
+    .then(() => setCartStatus('added'))
+    .catch(error => {
+      const status = error.response?.status;
+      // 401/422: no token, or one the server rejected
+      setCartStatus(status === 401 || status === 422
+        ? 'login'
+        : error.response?.data?.message || 'Could not add this card to your cart.');
+    });
   };
 
   const handleQuantityChange = (change) => {
@@ -92,6 +95,15 @@ function CardDetail() {
           <button className="add-to-cart" onClick={handleAddToCart}>
             <i className="fas fa-cart-plus"></i> Add to Cart
           </button>
+          {cartStatus === 'added' && (
+            <p className="cart-message">Added to your cart. <Link to="/cart">View cart</Link></p>
+          )}
+          {cartStatus === 'login' && (
+            <p className="cart-message">Please <Link to="/login">log in</Link> to add cards to your cart.</p>
+          )}
+          {cartStatus && cartStatus !== 'added' && cartStatus !== 'login' && (
+            <p className="cart-message error">{cartStatus}</p>
+          )}
         </div>
       </div>
       <div className="related-cards">

@@ -23,6 +23,13 @@ export const AuthProvider = ({ children }) => {
     refreshUser();
   }, [refreshUser]);
 
+  // Fired by the API client when the server rejects our token.
+  useEffect(() => {
+    const handleLogout = () => setUser(null);
+    window.addEventListener('auth:logout', handleLogout);
+    return () => window.removeEventListener('auth:logout', handleLogout);
+  }, []);
+
   const login = async (email, password) => {
     try {
       const response = await api.post('/users/login', { email, password });

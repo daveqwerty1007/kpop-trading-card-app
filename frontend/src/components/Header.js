@@ -34,7 +34,7 @@ const Header = () => {
         <div className="header-icons">
           {isLoggedIn ? (
             <>
-              <Link to="/account" className="header-button">{user.name}</Link>
+              <Link to="/user_panel" className="header-button">{user.name}</Link>
               <button onClick={handleLogout} className="header-button">Logout</button>
             </>
           ) : (

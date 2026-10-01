@@ -7,6 +7,7 @@ const Users = () => {
   const [loading, setLoading] = useState(true);
   const [isUpdate, setIsUpdate] = useState(false);
   const [error, setError] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -46,6 +47,7 @@ const Users = () => {
     console.log(event.target,user)
   };
   const saveUser = async (user) => {
+    setActionError(null);
     try {
       await api.put('/admin/update_user', { email: user.emailNew, id: user.id, name: user.nameNew });
       user.isUpdate = false
@@ -53,16 +55,17 @@ const Users = () => {
       user.name = user.nameNew
       setIsUpdate(!isUpdate)
     } catch (error) {
-      setError('Failed to update user');
+      setActionError(error.response?.data?.message || 'Failed to update user');
     }
   };
   const deleteUser = async (userId) => {
+    setActionError(null);
     try {
       await api.delete('/admin/delete_user', { data: { id: userId } });
       fetchUsers()
       // setUsers(users.filter(user => user.id !== userId));
     } catch (error) {
-      setError('Failed to delete user');
+      setActionError(error.response?.data?.message || 'Failed to delete user');
     }
   };
 
@@ -72,6 +75,7 @@ const Users = () => {
   return (
     <div className="users">
       <h1>Users</h1>
+      {actionError && <p className="error">{actionError}</p>}
       <table>
         <thead>
           <tr>
