@@ -1,9 +1,9 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 from pydantic import ValidationError
 from datetime import datetime
 
-from ..utils import admin_required, owns_or_admin
+from ..utils import admin_required, current_user_id, owns_or_admin
 from ..crud import (
     create_order, get_all_orders, get_order_by_id, get_order_filter_options, search_orders, update_order, delete_order,
     get_cart_items, clear_cart, create_payment, calculate_cart_total
@@ -16,7 +16,7 @@ bp = Blueprint('orders', __name__, url_prefix='/orders')
 @bp.route('/cart', methods=['GET'])
 @jwt_required()
 def cart():
-    user_id = get_jwt_identity()
+    user_id = current_user_id()
     cart_items = get_cart_items(user_id)
     total_amount = calculate_cart_total(cart_items)
     return jsonify({"cart_items": [item.to_dict() for item in cart_items], "total_amount": total_amount}), 200
@@ -25,7 +25,7 @@ def cart():
 @jwt_required()
 def checkout():
     try:
-        user_id = get_jwt_identity()
+        user_id = current_user_id()
         cart_items = get_cart_items(user_id)
         if not cart_items:
             return jsonify({'message': 'Cart is empty'}), 400
@@ -59,7 +59,7 @@ def detail(order_id):
         order = get_order_by_id(order_id)
         if order is None:
             return jsonify({'message': 'Order not found'}), 404
-        identity = get_jwt_identity()
+        identity = current_user_id()
         if not owns_or_admin(order.user_id, identity):
             return jsonify({'message': 'Forbidden'}), 403
         return jsonify(OrderSchema.from_orm(order).dict()), 200

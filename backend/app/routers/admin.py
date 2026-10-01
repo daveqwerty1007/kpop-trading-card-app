@@ -27,7 +27,7 @@ def admin_login():
 
         admin = User.query.filter_by(email=email, role='admin').first()
         if admin and check_password_hash(admin.password, password):
-            access_token = create_access_token(identity=admin.id, additional_claims={'role': 'admin'})
+            access_token = create_access_token(identity=str(admin.id), additional_claims={'role': 'admin'})
             logging.info(f"Admin {admin.email} logged in.")
             return jsonify({"message": "Admin login successful", "access_token": access_token, "admin_id": admin.id}), 200
         else:

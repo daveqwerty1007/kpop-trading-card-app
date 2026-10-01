@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 from ..crud import create_cart_item, get_cart_item_by_id, update_cart_item, delete_cart_item, get_cart_items, get_card_by_id
 from ..schemas import CartItemSchema, CardSchema
+from ..utils import current_user_id
 
 bp = Blueprint('cart_items', __name__, url_prefix='/cart_items')
 
@@ -9,7 +10,7 @@ bp = Blueprint('cart_items', __name__, url_prefix='/cart_items')
 @jwt_required()
 def create():
     cart_item_data = request.json
-    user_id = get_jwt_identity()
+    user_id = current_user_id()
     cart_item_data['user_id'] = user_id
     cart_item = create_cart_item(cart_item_data)
     return jsonify(CartItemSchema.from_orm(cart_item).dict()), 201
@@ -20,7 +21,7 @@ def get(cart_item_id):
     cart_item = get_cart_item_by_id(cart_item_id)
     if cart_item is None:
         return jsonify({'message': 'Cart item not found'}), 404
-    if cart_item.user_id != get_jwt_identity():
+    if cart_item.user_id != current_user_id():
         return jsonify({'message': 'Forbidden'}), 403
     return jsonify(CartItemSchema.from_orm(cart_item).dict())
 
@@ -30,7 +31,7 @@ def update(cart_item_id):
     cart_item = get_cart_item_by_id(cart_item_id)
     if cart_item is None:
         return jsonify({'message': 'Cart item not found'}), 404
-    if cart_item.user_id != get_jwt_identity():
+    if cart_item.user_id != current_user_id():
         return jsonify({'message': 'Forbidden'}), 403
     cart_item = update_cart_item(cart_item_id, {'quantity': request.json.get('quantity')})
     return jsonify(CartItemSchema.from_orm(cart_item).dict())
@@ -41,7 +42,7 @@ def delete(cart_item_id):
     cart_item = get_cart_item_by_id(cart_item_id)
     if cart_item is None:
         return jsonify({'message': 'Cart item not found'}), 404
-    if cart_item.user_id != get_jwt_identity():
+    if cart_item.user_id != current_user_id():
         return jsonify({'message': 'Forbidden'}), 403
     delete_cart_item(cart_item_id)
     return '', 204
@@ -49,7 +50,7 @@ def delete(cart_item_id):
 @bp.route('/', methods=['GET'])
 @jwt_required()
 def list_cart_items():
-    user_id = get_jwt_identity()
+    user_id = current_user_id()
     cart_items = get_cart_items(user_id)
     detailed_cart_items = []
 

@@ -12,6 +12,15 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def current_user_id():
+    """The current request's user id as an int.
+
+    Tokens carry the id as a string (PyJWT >= 2.10 rejects non-string
+    'sub' claims), so convert it back before comparing with integer
+    columns. int() also accepts tokens issued before this change.
+    """
+    return int(get_jwt_identity())
+
 def is_current_admin():
     """Whether the current request's JWT belongs to an admin.
 
@@ -32,7 +41,7 @@ def owns_or_admin(owner_id, identity):
 
 def current_profile(model):
     """Return {id, email, name} for the model row matching the current JWT identity, or None."""
-    entity = model.query.get(get_jwt_identity())
+    entity = model.query.get(current_user_id())
     if entity:
         return {"id": entity.id, "email": entity.email, "name": entity.name}
     return None

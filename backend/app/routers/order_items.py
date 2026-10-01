@@ -1,9 +1,9 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 from ..crud import create_order_item, get_order_item_by_id, update_order_item, delete_order_item, get_order_items
 from ..schemas import OrderItem
 from ..models import Order
-from ..utils import admin_required, owns_or_admin
+from ..utils import admin_required, current_user_id, owns_or_admin
 
 bp = Blueprint('order_items', __name__, url_prefix='/order_items')
 
@@ -20,7 +20,7 @@ def get(order_item_id):
     order_item = get_order_item_by_id(order_item_id)
     if order_item is None:
         return jsonify({'message': 'Order item not found'}), 404
-    identity = get_jwt_identity()
+    identity = current_user_id()
     order = Order.query.get(order_item.order_id)
     if not owns_or_admin(order.user_id if order else None, identity):
         return jsonify({'message': 'Forbidden'}), 403

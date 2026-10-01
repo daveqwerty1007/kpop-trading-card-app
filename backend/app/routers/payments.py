@@ -1,10 +1,10 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 from pydantic import ValidationError
 from ..crud import create_payment, get_payment_by_id, update_payment, delete_payment
 from ..schemas import PaymentSchema, PaymentCreateSchema, PaymentUpdateSchema
 from ..models import Order
-from ..utils import owns_or_admin
+from ..utils import current_user_id, owns_or_admin
 
 bp = Blueprint('payments', __name__, url_prefix='/payments')
 
@@ -19,7 +19,7 @@ def create():
         payment_data = PaymentCreateSchema(**request.json).dict()
     except ValidationError as e:
         return jsonify({'errors': e.errors()}), 400
-    identity = get_jwt_identity()
+    identity = current_user_id()
     order = Order.query.get(payment_data.get('order_id'))
     if order is None:
         return jsonify({'message': 'Order not found'}), 404
@@ -34,7 +34,7 @@ def get(payment_id):
     payment = get_payment_by_id(payment_id)
     if payment is None:
         return jsonify({'message': 'Payment not found'}), 404
-    if not _can_access_payment(payment, get_jwt_identity()):
+    if not _can_access_payment(payment, current_user_id()):
         return jsonify({'message': 'Forbidden'}), 403
     return jsonify(PaymentSchema.from_orm(payment).dict())
 
@@ -44,7 +44,7 @@ def update(payment_id):
     payment = get_payment_by_id(payment_id)
     if payment is None:
         return jsonify({'message': 'Payment not found'}), 404
-    if not _can_access_payment(payment, get_jwt_identity()):
+    if not _can_access_payment(payment, current_user_id()):
         return jsonify({'message': 'Forbidden'}), 403
     try:
         updates = PaymentUpdateSchema(**request.json).dict(exclude_unset=True)
@@ -59,7 +59,7 @@ def delete(payment_id):
     payment = get_payment_by_id(payment_id)
     if payment is None:
         return jsonify({'message': 'Payment not found'}), 404
-    if not _can_access_payment(payment, get_jwt_identity()):
+    if not _can_access_payment(payment, current_user_id()):
         return jsonify({'message': 'Forbidden'}), 403
     delete_payment(payment_id)
     return '', 204

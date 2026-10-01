@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
-    create_access_token, jwt_required, get_jwt_identity
+    create_access_token, jwt_required
 )
 from sqlalchemy import func
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -9,7 +9,7 @@ from ..crud import create_user, get_all_users, get_user_by_id, get_user_filter_o
 from ..models import User
 from ..schemas import UserPublicSchema, UserRegisterSchema, SettingsSchema
 from ..database import db
-from ..utils import current_profile
+from ..utils import current_profile, current_user_id
 import logging
 
 bp = Blueprint('users', __name__, url_prefix='/users')
@@ -27,7 +27,7 @@ def register():
         
         new_user_data = user_schema.dict()
         new_user = create_user(new_user_data)  # The create_user function will handle adding and committing
-        access_token = create_access_token(identity=new_user.id, additional_claims={'role': 'user'})
+        access_token = create_access_token(identity=str(new_user.id), additional_claims={'role': 'user'})
         return jsonify({"message": "Login successful", "access_token": access_token, "user_id": new_user.id}), 200
 
     except ValidationError as e:
@@ -58,7 +58,7 @@ def login():
     data = request.json
     user = User.query.filter_by(email=data.get('email')).first()
     if user and check_password_hash(user.password, data.get('password')):
-        access_token = create_access_token(identity=user.id, additional_claims={'role': 'user'})
+        access_token = create_access_token(identity=str(user.id), additional_claims={'role': 'user'})
         return jsonify({"message": "Login successful", "access_token": access_token, "user_id": user.id}), 200
     return jsonify({"message": "Invalid credentials"}), 401
 
@@ -92,8 +92,7 @@ def detail(user_id):
 @bp.route('/<int:user_id>', methods=['DELETE'])
 @jwt_required()
 def delete(user_id):
-    current_user_id = get_jwt_identity()
-    if current_user_id == user_id:  # Prevent users from deleting themselves
+    if current_user_id() == user_id:  # Prevent users from deleting themselves
         return jsonify({"message": "Cannot delete own account"}), 403
     user = delete_user(user_id)
     if user:
@@ -143,9 +142,8 @@ def get_current_user():
 @bp.route('/orders', methods=['GET'])
 @jwt_required()
 def current_user_orders():
-    current_user_id = get_jwt_identity()
     try:
-        orders = get_user_orders(current_user_id)
+        orders = get_user_orders(current_user_id())
         return jsonify(orders), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -153,7 +151,7 @@ def current_user_orders():
 @bp.route('/settings', methods=['GET'])
 @jwt_required()
 def get_settings():
-    user = User.query.get(get_jwt_identity())
+    user = User.query.get(current_user_id())
     if user is None:
         return jsonify({"message": "User not found"}), 404
     return jsonify({"emailMarketing": user.email_marketing}), 200
@@ -165,7 +163,7 @@ def update_settings():
         settings = SettingsSchema(**(request.json or {}))
     except ValidationError as e:
         return jsonify({"errors": e.errors()}), 400
-    user = User.query.get(get_jwt_identity())
+    user = User.query.get(current_user_id())
     if user is None:
         return jsonify({"message": "User not found"}), 404
     user.email_marketing = settings.emailMarketing
